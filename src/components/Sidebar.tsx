@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard,
   GitBranch,
+  CloudSun,
   AlertTriangle,
   TrendingUp,
   History,
@@ -28,6 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
   const navItems: { id: NavigationPage; label: string; icon: React.ElementType }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'twin', label: 'Microgrid Twin', icon: GitBranch },
+    { id: 'weather', label: 'Solar & Weather', icon: CloudSun },
     { id: 'faults', label: 'Fault Studio', icon: AlertTriangle },
     { id: 'prediction', label: 'Prediction Centre', icon: TrendingUp },
     { id: 'recovery', label: 'Recovery Control', icon: History },

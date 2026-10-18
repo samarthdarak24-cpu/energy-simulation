@@ -16,6 +16,7 @@ from backend.routers import (
     config_router,
     support_router,
     mongo_router,
+    weather_router,
 )
 
 
@@ -80,6 +81,7 @@ app.include_router(event_router.router)
 app.include_router(config_router.router)
 app.include_router(support_router.router)
 app.include_router(mongo_router.router)
+app.include_router(weather_router.router)
 
 
 @app.get("/")

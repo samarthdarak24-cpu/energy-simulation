@@ -24,6 +24,7 @@ const PAGE_TITLES: Record<NavigationPage, string> = {
   login: 'Sign In',
   overview: 'Recovery Lab',
   twin: 'Microgrid Digital Twin',
+  weather: 'Solar & Weather Intelligence',
   faults: 'Fault Simulation Studio',
   prediction: 'Prediction Centre',
   recovery: 'Recovery Control Centre',

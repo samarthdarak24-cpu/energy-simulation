@@ -27,6 +27,7 @@ export type NavigationPage =
   | 'login'
   | 'overview'
   | 'twin'
+  | 'weather'
   | 'faults'
   | 'prediction'
   | 'recovery'
