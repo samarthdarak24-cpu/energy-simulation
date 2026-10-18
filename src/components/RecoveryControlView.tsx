@@ -37,6 +37,8 @@ export const RecoveryControlView: React.FC = () => {
     events,
     appliedActions,
     setActivePage,
+    autoRecoverCountdown,
+    cancelAutoRecover,
   } = useMicrogrid();
 
   const [dateRange] = useState('Apr 28, 2025 – May 4, 2025');
@@ -318,15 +320,40 @@ export const RecoveryControlView: React.FC = () => {
               <span className="text-[10px] text-rose-800 block">Impact Level</span>
               <span className="font-sans text-xs font-bold text-rose-700">{impactLevel}</span>
             </div>
+            {autoRecoverCountdown !== null && autoRecoverCountdown > 0 && !isSimulating && (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50/90 px-3 py-1.5 shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span className="text-xs font-semibold text-amber-900">
+                  Auto-recover applying in <span className="font-mono font-black text-amber-700">{autoRecoverCountdown}s</span>
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
               <button
                 onClick={() => runRecoveryLoop()}
                 disabled={isSimulating}
                 className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
-                <Play className="h-3.5 w-3.5 fill-current" />
-                <span>{isSimulating ? 'Recovering...' : 'Auto-Recover'}</span>
+                <Play className={`h-3.5 w-3.5 fill-current ${isSimulating ? 'animate-spin' : ''}`} />
+                <span>
+                  {isSimulating
+                    ? 'Auto-Recovering...'
+                    : autoRecoverCountdown !== null && autoRecoverCountdown > 0
+                    ? `Auto-Recover (${autoRecoverCountdown}s)`
+                    : 'Auto-Recover'}
+                </span>
               </button>
+              {autoRecoverCountdown !== null && autoRecoverCountdown > 0 && (
+                <button
+                  onClick={cancelAutoRecover}
+                  className="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
+                >
+                  Cancel Auto
+                </button>
+              )}
               {activeFault && (
                 <button
                   onClick={clearFault}
@@ -687,10 +714,20 @@ export const RecoveryControlView: React.FC = () => {
             <button
               onClick={runRecoveryLoop}
               disabled={isSimulating}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all"
+              className={`w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold text-white shadow-xs transition-all ${
+                autoRecoverCountdown !== null && autoRecoverCountdown > 0
+                  ? 'bg-amber-600 hover:bg-amber-700 ring-2 ring-amber-400/50'
+                  : 'bg-[#2E7D32] hover:bg-[#256829]'
+              }`}
             >
-              <Play className="h-3.5 w-3.5 fill-current" />
-              <span>{isSimulating ? 'Optimizing...' : 'Start Simulation'}</span>
+              <Play className={`h-3.5 w-3.5 fill-current ${isSimulating ? 'animate-spin' : ''}`} />
+              <span>
+                {isSimulating
+                  ? 'Optimizing...'
+                  : autoRecoverCountdown !== null && autoRecoverCountdown > 0
+                  ? `Recover Now (${autoRecoverCountdown}s)`
+                  : 'Start Simulation'}
+              </span>
             </button>
 
             <div className="grid grid-cols-2 gap-2 text-xs">

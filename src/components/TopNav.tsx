@@ -56,6 +56,8 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
     events,
     assets,
     faultScenarios,
+    autoRecoverCountdown,
+    activeFault,
   } = useMicrogrid();
 
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -153,7 +155,10 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
 
   const getPrimaryButtonLabel = () => {
     if (isSimulating) return 'Simulating...';
-    return 'Run Simulation';
+    if (autoRecoverCountdown !== null && autoRecoverCountdown > 0) {
+      return `Auto-heal (${autoRecoverCountdown}s)`;
+    }
+    return activeFault ? 'Run Recovery' : 'Run Simulation';
   };
 
   return (
@@ -409,8 +414,15 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
           className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all ${
             isSimulating
               ? 'bg-emerald-700 cursor-not-allowed opacity-80'
+              : autoRecoverCountdown !== null && autoRecoverCountdown > 0
+              ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.98] ring-2 ring-amber-400/50'
               : 'bg-[#2E7D32] hover:bg-[#256829] active:scale-[0.98]'
           }`}
+          title={
+            autoRecoverCountdown !== null && autoRecoverCountdown > 0
+              ? `Auto-recovery will apply automatically in ${autoRecoverCountdown} seconds. Click to apply immediately.`
+              : 'Execute self-healing simulation'
+          }
         >
           <Play className={`h-3.5 w-3.5 fill-current ${isSimulating ? 'animate-spin' : ''}`} />
           <span>{getPrimaryButtonLabel()}</span>

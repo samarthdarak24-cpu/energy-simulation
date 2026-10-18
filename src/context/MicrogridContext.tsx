@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   MicrogridTelemetry,
   RecoveryStep,
@@ -79,6 +79,12 @@ interface MicrogridContextType {
   lastTelemetryUpdate: Date;
   realtimeTick: number;
   isWsConnected: boolean;
+  autoRecoverCountdown: number | null;
+  autoRecoverTotalSeconds: number;
+  isAutoRecoverPaused: boolean;
+  cancelAutoRecover: () => void;
+  pauseAutoRecover: () => void;
+  resumeAutoRecover: () => void;
   injectFault: (scenarioId: string, severity?: number, durationHours?: number) => void;
   clearFault: () => void;
   runRecoveryLoop: () => void;
@@ -115,6 +121,11 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [lastTelemetryUpdate, setLastTelemetryUpdate] = useState<Date>(new Date());
   const [realtimeTick, setRealtimeTick] = useState<number>(0);
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
+
+  // Auto-recovery countdown state (15s default countdown when fault injected)
+  const [autoRecoverCountdown, setAutoRecoverCountdown] = useState<number | null>(null);
+  const [autoRecoverTotalSeconds, setAutoRecoverTotalSeconds] = useState<number>(15);
+  const [isAutoRecoverPaused, setIsAutoRecoverPaused] = useState<boolean>(false);
 
   const toggleRealtime = useCallback(() => {
     setIsRealtimeActive((prev) => !prev);
@@ -346,6 +357,9 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setActiveFault(scenario);
     setFaultSeverity(severity);
     setFaultDurationHours(durationHours);
+    setAutoRecoverCountdown(15);
+    setAutoRecoverTotalSeconds(15);
+    setIsAutoRecoverPaused(false);
 
     // Notify FastAPI backend
     fetch('http://localhost:8000/api/faults/inject', {
@@ -553,6 +567,8 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Execute closed-loop automated self-healing recovery
   const runRecoveryLoop = useCallback(async () => {
     if (isSimulating) return;
+    setAutoRecoverCountdown(null);
+    setIsAutoRecoverPaused(false);
     setIsSimulating(true);
 
     const currentTime = getTimeString();
@@ -704,6 +720,8 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const clearFault = useCallback(() => {
     fetch('http://localhost:8000/api/faults/clear', { method: 'POST' }).catch(() => {});
     setActiveFault(null);
+    setAutoRecoverCountdown(null);
+    setIsAutoRecoverPaused(false);
     setAppliedActions([]);
     setTelemetry(INITIAL_TELEMETRY);
     setAssets(INITIAL_ASSETS);
@@ -723,6 +741,8 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }).catch(() => {});
     fetch('http://localhost:8000/api/faults/clear', { method: 'POST' }).catch(() => {});
     setActiveFault(null);
+    setAutoRecoverCountdown(null);
+    setIsAutoRecoverPaused(false);
     setAppliedActions([]);
     setTelemetry(INITIAL_TELEMETRY);
     setPipelineSteps(INITIAL_PIPELINE_STEPS);
@@ -732,6 +752,57 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setRecoveryStateText('Reassess if imbalance remains');
     setIsSimulating(false);
   }, []);
+
+  const cancelAutoRecover = useCallback(() => {
+    setAutoRecoverCountdown(null);
+    setIsAutoRecoverPaused(false);
+  }, []);
+
+  const pauseAutoRecover = useCallback(() => {
+    setIsAutoRecoverPaused(true);
+  }, []);
+
+  const resumeAutoRecover = useCallback(() => {
+    setIsAutoRecoverPaused(false);
+  }, []);
+
+  // Keep a stable ref to runRecoveryLoop so telemetry stream updates don't reset the countdown timer
+  const runRecoveryLoopRef = useRef(runRecoveryLoop);
+  useEffect(() => {
+    runRecoveryLoopRef.current = runRecoveryLoop;
+  }, [runRecoveryLoop]);
+
+  // Whenever a fault is active and not simulating/paused, ensure the 15-second countdown is active
+  useEffect(() => {
+    if (activeFault && !isSimulating && autoRecoverCountdown === null && !isAutoRecoverPaused) {
+      setAutoRecoverCountdown(15);
+      setAutoRecoverTotalSeconds(15);
+    }
+  }, [activeFault, isSimulating, autoRecoverCountdown, isAutoRecoverPaused]);
+
+  // Automated countdown self-healing execution effect
+  useEffect(() => {
+    if (autoRecoverCountdown === null || isSimulating || isAutoRecoverPaused) {
+      return;
+    }
+
+    if (autoRecoverCountdown <= 0) {
+      setAutoRecoverCountdown(null);
+      runRecoveryLoopRef.current();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setAutoRecoverCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [autoRecoverCountdown, isSimulating, isAutoRecoverPaused]);
 
   const exportAuditCsv = useCallback(() => {
     const headers = ['Timestamp', 'Event', 'Status', 'Details'];
@@ -787,6 +858,12 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       lastTelemetryUpdate,
       realtimeTick,
       isWsConnected,
+      autoRecoverCountdown,
+      autoRecoverTotalSeconds,
+      isAutoRecoverPaused,
+      cancelAutoRecover,
+      pauseAutoRecover,
+      resumeAutoRecover,
       injectFault,
       clearFault,
       runRecoveryLoop,
@@ -822,6 +899,12 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       lastTelemetryUpdate,
       realtimeTick,
       isWsConnected,
+      autoRecoverCountdown,
+      autoRecoverTotalSeconds,
+      isAutoRecoverPaused,
+      cancelAutoRecover,
+      pauseAutoRecover,
+      resumeAutoRecover,
       injectFault,
       clearFault,
       runRecoveryLoop,

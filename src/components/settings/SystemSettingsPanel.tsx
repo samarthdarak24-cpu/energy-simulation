@@ -120,6 +120,23 @@ export const SystemSettingsPanel: React.FC = () => {
               Records older than {retention} days are purged automatically.
             </div>
           </div>
+
+          {/* MongoDB Atlas Cloud Integration */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-emerald-600" />
+                <span className="font-semibold text-slate-800 text-xs">MongoDB Atlas Cloud</span>
+              </div>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                Atlas Driver Ready
+              </span>
+            </div>
+            <p className="mt-1.5 text-[11px] text-slate-500 leading-snug">
+              Configured via <code className="font-mono text-emerald-700">MONGODB_URL</code> in <code className="font-mono text-slate-700">.env</code>. Telemetry, events, and simulation data auto-persist to cloud collections.
+            </p>
+          </div>
+
           <button
             onClick={exportAuditCsv}
             className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"

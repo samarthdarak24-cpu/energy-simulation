@@ -54,6 +54,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     isRealtimeActive,
     toggleRealtime,
     isWsConnected,
+    autoRecoverCountdown,
+    autoRecoverTotalSeconds,
+    isAutoRecoverPaused,
+    cancelAutoRecover,
+    pauseAutoRecover,
+    resumeAutoRecover,
   } = useMicrogrid();
 
   const [hoveredBar, setHoveredBar] = useState<HistoricalBarData | null>(
@@ -179,15 +185,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
           </div>
 
-          {/* Active Fault Alert Banner */}
+          {/* Active Fault Alert Banner with Auto-Recover Countdown */}
           {activeFault && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600 shrink-0">
-                  <AlertTriangle className="h-5 w-5" />
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3 animate-in fade-in transition-all">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600 shrink-0 mt-0.5">
+                  <AlertTriangle className="h-5 w-5 animate-pulse" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider bg-rose-100 px-1.5 py-0.5 rounded">
                       Active Disturbance
                     </span>
@@ -195,21 +201,86 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       {activeFault.name} ({faultSeverity}% severity)
                     </span>
                   </div>
-                  <p className="text-xs text-rose-800/90 mt-0.5">
+                  <p className="text-xs text-rose-800/90">
                     {activeFault.impactSummary}
                   </p>
+
+                  {/* Auto-recover live countdown capsule & progress */}
+                  {autoRecoverCountdown !== null && autoRecoverCountdown > 0 && !isSimulating && (
+                    <div className="pt-1 flex flex-wrap items-center gap-2.5">
+                      <div className="inline-flex items-center gap-1.5 rounded-lg bg-white/95 border border-amber-300 px-2.5 py-1 text-xs font-semibold text-amber-900 shadow-2xs">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        <span>Auto-recover applying in</span>
+                        <span className="font-mono font-black text-sm text-amber-700 tabular-nums">
+                          {autoRecoverCountdown}s
+                        </span>
+                      </div>
+
+                      {/* Depleting countdown progress bar */}
+                      <div className="w-28 sm:w-36 h-2 bg-rose-200/80 rounded-full overflow-hidden border border-rose-300/40">
+                        <div
+                          className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
+                          style={{
+                            width: `${Math.max(0, Math.min(100, (autoRecoverCountdown / (autoRecoverTotalSeconds || 15)) * 100))}%`,
+                          }}
+                        />
+                      </div>
+
+                      {isAutoRecoverPaused ? (
+                        <button
+                          onClick={resumeAutoRecover}
+                          className="text-[11px] font-semibold text-amber-800 hover:text-amber-900 underline flex items-center gap-1"
+                        >
+                          <Play className="h-2.5 w-2.5 fill-current" />
+                          Resume
+                        </button>
+                      ) : (
+                        <button
+                          onClick={pauseAutoRecover}
+                          className="text-[11px] font-semibold text-slate-600 hover:text-slate-800 underline flex items-center gap-1"
+                          title="Pause auto-recovery countdown"
+                        >
+                          <Pause className="h-2.5 w-2.5" />
+                          Pause
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {autoRecoverCountdown === null && !isSimulating && (
+                    <p className="text-[11px] font-medium text-slate-500">
+                      Auto-recovery timer cancelled. Ready for manual trigger.
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
                 <button
                   onClick={() => runRecoveryLoop()}
                   disabled={isSimulating}
-                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5 active:scale-[0.98]"
                 >
-                  <Play className="h-3 w-3 fill-current" />
-                  <span>{isSimulating ? 'Recovering...' : 'Auto-Recover'}</span>
+                  <Play className={`h-3.5 w-3.5 fill-current ${isSimulating ? 'animate-spin' : ''}`} />
+                  <span>
+                    {isSimulating
+                      ? 'Auto-Recovering...'
+                      : autoRecoverCountdown !== null && autoRecoverCountdown > 0
+                      ? `Auto-Recover (${autoRecoverCountdown}s)`
+                      : 'Auto-Recover'}
+                  </span>
                 </button>
+                {autoRecoverCountdown !== null && autoRecoverCountdown > 0 && (
+                  <button
+                    onClick={cancelAutoRecover}
+                    className="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
+                  >
+                    Cancel Auto
+                  </button>
+                )}
                 <button
                   onClick={clearFault}
                   className="px-3.5 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-100/60 text-rose-700 text-xs font-semibold transition-colors"
