@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, AlertTriangle, Flame, Zap, BatteryLow, Car, Radio, WifiOff, RotateCcw } from 'lucide-react';
+import { X, AlertTriangle, Flame, Zap, BatteryLow, Car, Radio, WifiOff, RotateCcw, Clock } from 'lucide-react';
 import { useMicrogrid } from '../context/MicrogridContext';
 
 interface FaultModalProps {
@@ -121,6 +121,14 @@ export const FaultModal: React.FC<FaultModalProps> = ({ isOpen, onClose }) => {
             <span className="text-slate-400">Impact: </span>
             {currentScenario.impactSummary}
           </div>
+        </div>
+
+        {/* Auto-recover countdown notice */}
+        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 flex items-center gap-2.5 text-xs text-amber-900">
+          <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+          <span>
+            <strong>Automatic Self-Healing:</strong> Fault injection triggers an automatic 15s countdown before self-healing executes (or apply instantly).
+          </span>
         </div>
 
         {/* Actions */}

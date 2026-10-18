@@ -9,6 +9,7 @@ import { TopNav } from './components/TopNav';
 import { Sidebar } from './components/Sidebar';
 import { OverviewDashboard } from './components/OverviewDashboard';
 import { MicrogridTwinView } from './components/MicrogridTwinView';
+import { WeatherIntelligenceView } from './components/WeatherIntelligenceView';
 import { FaultStudioView } from './components/FaultStudioView';
 import { PredictionCentreView } from './components/PredictionCentreView';
 import { RecoveryControlView } from './components/RecoveryControlView';
@@ -52,6 +53,7 @@ function MainAppContent() {
             />
           )}
           {activePage === 'twin' && <MicrogridTwinView />}
+          {activePage === 'weather' && <WeatherIntelligenceView />}
           {activePage === 'faults' && <FaultStudioView />}
           {activePage === 'prediction' && <PredictionCentreView />}
           {activePage === 'recovery' && <RecoveryControlView />}

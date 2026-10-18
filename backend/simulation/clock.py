@@ -17,7 +17,11 @@ class SimulationClock:
         self.is_running = True
 
     def tick(self) -> int:
-        self.current_step += 1
+        if self.is_running:
+            self.current_step += 1
+            # Keep within daytime operating window (12:00 PM to 2:00 PM) for persistent live simulation
+            if self.current_step > 24:
+                self.current_step = 0
         return self.current_step
 
     @property

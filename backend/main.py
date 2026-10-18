@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.database import init_db
+from backend.mongodb import init_mongo, close_mongo, is_mongodb_configured, MONGODB_DB_NAME
 from backend.simulation.orchestrator import orchestrator
 from backend.routers import (
     simulation_router,
@@ -15,6 +16,8 @@ from backend.routers import (
     config_router,
     support_router,
     dataset_router,
+    mongo_router,
+    weather_router,
 )
 
 
@@ -39,17 +42,19 @@ async def simulation_clock_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: initialize database tables
+    # Startup: initialize database tables & MongoDB connection
     init_db()
+    await init_mongo()
     # Start background simulation clock task
     task = asyncio.create_task(simulation_clock_loop())
     yield
-    # Shutdown: cancel background task
+    # Shutdown: cancel background task & close MongoDB
     task.cancel()
     try:
         await task
     except asyncio.CancelledError:
         pass
+    await close_mongo()
 
 
 app = FastAPI(
@@ -79,6 +84,8 @@ app.include_router(event_router.router)
 app.include_router(config_router.router)
 app.include_router(support_router.router)
 app.include_router(dataset_router.router)
+app.include_router(mongo_router.router)
+app.include_router(weather_router.router)
 
 
 @app.get("/")
@@ -88,7 +95,11 @@ def root():
         "tagline": "Simulate. Anticipate. Recover. Verify.",
         "status": "Online",
         "docs": "/docs",
-        "simulationRunId": orchestrator.run_id
+        "simulationRunId": orchestrator.run_id,
+        "mongodb": {
+            "configured": is_mongodb_configured(),
+            "database": MONGODB_DB_NAME
+        }
     }
 
 

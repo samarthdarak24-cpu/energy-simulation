@@ -129,6 +129,7 @@ export const FaultStudioView: React.FC = () => {
     activeFault,
     faultSeverity,
     faultDurationHours,
+    clearFault,
     resetAll,
     runRecoveryLoop,
     isSimulating,
@@ -746,11 +747,28 @@ export const FaultStudioView: React.FC = () => {
                 <span className="flex items-center gap-1.5">
                   <Radio className="h-3.5 w-3.5 text-emerald-600" /> Grid Status
                 </span>
-                <span className="font-semibold text-emerald-700">Connected</span>
+                <span
+                  className={`font-semibold flex items-center gap-1 ${
+                    telemetry.gridStatus === 'connected' ? 'text-emerald-700' : 'text-rose-700'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      telemetry.gridStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'
+                    }`}
+                  />
+                  {telemetry.gridStatus === 'connected' ? 'Connected' : 'Islanded'}
+                </span>
               </div>
               <div className="flex justify-between items-center text-slate-600 pt-1 border-t border-slate-100">
                 <span className="font-semibold text-slate-700">Power Balance</span>
-                <span className="font-mono font-bold text-emerald-600">+23 kW</span>
+                <span
+                  className={`font-mono font-bold ${
+                    telemetry.netBalanceKw >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                  }`}
+                >
+                  {telemetry.netBalanceKw >= 0 ? `+${telemetry.netBalanceKw}` : `${telemetry.netBalanceKw}`} kW
+                </span>
               </div>
             </div>
           </div>
@@ -759,15 +777,28 @@ export const FaultStudioView: React.FC = () => {
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-900">Active Faults</span>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  activeFault ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
                 {activeFault ? '1' : '0'}
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               {activeFault
                 ? `Active: ${activeFault.name} · ${faultSeverity}% · ${faultDurationHours}h`
                 : 'No active faults'}
             </p>
+            {activeFault && (
+              <button
+                onClick={clearFault}
+                className="mt-2.5 w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg py-1.5 transition-colors border border-rose-200"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Clear Active Fault
+              </button>
+            )}
           </div>
 
           {/* Recovery Status */}

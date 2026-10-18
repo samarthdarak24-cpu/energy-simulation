@@ -11,11 +11,11 @@ import {
 
 export const INITIAL_TELEMETRY: MicrogridTelemetry = {
   solarGeneration: 128,
-  solarPrevChange: 12,
+  solarPrevChange: 18,
   totalDemand: 105,
-  demandPrevChange: 6,
+  demandPrevChange: 4,
   batterySoc: 76,
-  batterySocChange: 5,
+  batterySocChange: -2,
   batteryPower: 50,
   batteryCapacityKwh: 200,
   criticalLoadsServed: 100,
