@@ -19,20 +19,79 @@ import {
 } from 'lucide-react';
 import { useMicrogrid } from '../context/MicrogridContext';
 
+type TrendTab = 'unserved' | 'peak' | 'emissions' | 'renewable';
+
+const TREND_DATA: Record<
+  TrendTab,
+  { label: string; baseline: string; rule: string; predictive: string }
+> = {
+  unserved: {
+    label: 'Unserved Energy',
+    baseline: 'M 10 70 Q 70 30 130 50 T 230 75',
+    rule: 'M 10 75 Q 70 45 130 60 T 230 80',
+    predictive: 'M 10 80 Q 70 60 130 70 T 230 85',
+  },
+  peak: {
+    label: 'Peak Demand',
+    baseline: 'M 10 40 Q 70 55 130 45 T 230 30',
+    rule: 'M 10 50 Q 70 62 130 52 T 230 38',
+    predictive: 'M 10 58 Q 70 70 130 60 T 230 46',
+  },
+  emissions: {
+    label: 'Emissions',
+    baseline: 'M 10 35 Q 60 50 120 42 T 230 55',
+    rule: 'M 10 48 Q 60 62 120 55 T 230 66',
+    predictive: 'M 10 60 Q 60 72 120 66 T 230 76',
+  },
+  renewable: {
+    label: 'Renewable',
+    baseline: 'M 10 75 Q 70 65 130 58 T 230 52',
+    rule: 'M 10 68 Q 70 56 130 48 T 230 42',
+    predictive: 'M 10 60 Q 70 46 130 38 T 230 32',
+  },
+};
+
 export const BenchmarkCentreView: React.FC = () => {
-  const { exportAuditCsv } = useMicrogrid();
+  const { exportAuditCsv, setActivePage } = useMicrogrid();
 
   const [dateRange] = useState('Apr 28, 2025 – May 4, 2025');
   const [selectedScenario, setSelectedScenario] = useState('Solar Generation Loss (50%)');
-  const [activeTrendTab, setActiveTrendTab] = useState<'unserved' | 'peak' | 'emissions' | 'renewable'>('unserved');
+  const [activeTrendTab, setActiveTrendTab] = useState<TrendTab>('unserved');
+  const [running, setRunning] = useState(false);
+  const [settingsApplied, setSettingsApplied] = useState(false);
+
+  const runBenchmark = () => {
+    if (running) return;
+    setRunning(true);
+    setTimeout(() => {
+      setRuns((prev) => [
+        {
+          dateTime: 'May 4, 2025 – 12:00 PM',
+          scenario: selectedScenario,
+          controller: 'Predictive (Our Approach)',
+          unserved: '4.1',
+          critical: '99.8%',
+          time: '7.2 min',
+          status: 'Completed',
+        },
+        ...prev,
+      ]);
+      setRunning(false);
+    }, 1200);
+  };
+
+  const applySettings = () => {
+    setSettingsApplied(true);
+    setTimeout(() => setSettingsApplied(false), 2000);
+  };
 
   const comparisonCategories = [
-    { name: 'Renewable Use (%)', baseline: 70, ruleBased: 76, predictive: 82 },
-    { name: 'Critical Load Service (%)', baseline: 96.2, ruleBased: 98.7, predictive: 99.8 },
-    { name: 'Unserved Energy (kWh)', baseline: 13.1, ruleBased: 8.6, predictive: 4.2 },
-    { name: 'Peak Demand (kW)', baseline: 61, ruleBased: 54, predictive: 48 },
-    { name: 'Emissions (kg)', baseline: 31.8, ruleBased: 24.6, predictive: 18.7 },
-    { name: 'Recovery Time (min)', baseline: 15.8, ruleBased: 11.2, predictive: 7.4 },
+    { name: 'Renewable Use (%)', lines: ['Renewable', 'Use (%)'], baseline: 70, ruleBased: 76, predictive: 82 },
+    { name: 'Critical Load Service (%)', lines: ['Critical Load', 'Service (%)'], baseline: 96.2, ruleBased: 98.7, predictive: 99.8 },
+    { name: 'Unserved Energy (kWh)', lines: ['Unserved', 'Energy (kWh)'], baseline: 13.1, ruleBased: 8.6, predictive: 4.2 },
+    { name: 'Peak Demand (kW)', lines: ['Peak Demand', '(kW)'], baseline: 61, ruleBased: 54, predictive: 48 },
+    { name: 'Emissions (kg)', lines: ['Emissions', '(kg)'], baseline: 31.8, ruleBased: 24.6, predictive: 18.7 },
+    { name: 'Recovery Time (min)', lines: ['Recovery Time', '(min)'], baseline: 15.8, ruleBased: 11.2, predictive: 7.4 },
   ];
 
   const scenarioSummary = [
@@ -92,6 +151,8 @@ export const BenchmarkCentreView: React.FC = () => {
     },
   ];
 
+  const [runs, setRuns] = useState(recentBenchmarkRuns);
+
   return (
     <div className="flex-1 p-6 space-y-6 max-w-[1600px] mx-auto text-slate-800">
       {/* Header */}
@@ -126,11 +187,12 @@ export const BenchmarkCentreView: React.FC = () => {
           </div>
 
           <button
-            onClick={() => {}}
-            className="flex items-center gap-1.5 rounded-lg bg-[#2E7D32] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all"
+            onClick={runBenchmark}
+            disabled={running}
+            className="flex items-center gap-1.5 rounded-lg bg-[#2E7D32] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all disabled:opacity-70"
           >
-            <Play className="h-3.5 w-3.5 fill-current" />
-            <span>Run Benchmark</span>
+            <Play className={`h-3.5 w-3.5 fill-current ${running ? 'animate-spin' : ''}`} />
+            <span>{running ? 'Running...' : 'Run Benchmark'}</span>
           </button>
         </div>
       </div>
@@ -295,14 +357,22 @@ export const BenchmarkCentreView: React.FC = () => {
                           {cat.predictive}
                         </text>
 
-                        {/* Category Label */}
+                        {/* Category Label (two lines so nothing is truncated) */}
                         <text
                           x={groupX + 24}
-                          y="173"
+                          y="169"
                           textAnchor="middle"
                           className="text-[7px] fill-slate-500 font-sans"
                         >
-                          {cat.name.split(' ')[0]}
+                          {cat.lines[0]}
+                        </text>
+                        <text
+                          x={groupX + 24}
+                          y="177"
+                          textAnchor="middle"
+                          className="text-[7px] fill-slate-400 font-sans"
+                        >
+                          {cat.lines[1]}
                         </text>
                       </g>
                     );
@@ -353,7 +423,7 @@ export const BenchmarkCentreView: React.FC = () => {
               </div>
 
               <button
-                onClick={() => {}}
+                onClick={() => setActivePage('faults')}
                 className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-emerald-700 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-800"
               >
                 <Eye className="h-3.5 w-3.5" />
@@ -373,13 +443,13 @@ export const BenchmarkCentreView: React.FC = () => {
                     <button
                       key={tab}
                       onClick={() => setActiveTrendTab(tab)}
-                      className={`px-2 py-0.5 rounded capitalize ${
+                      className={`px-2 py-0.5 rounded ${
                         activeTrendTab === tab
                           ? 'bg-emerald-600 text-white font-bold'
                           : 'text-slate-600'
                       }`}
                     >
-                      {tab === 'unserved' ? 'Unserved Energy' : tab === 'peak' ? 'Peak Demand' : tab}
+                      {TREND_DATA[tab].label}
                     </button>
                   ))}
                 </div>
@@ -400,9 +470,25 @@ export const BenchmarkCentreView: React.FC = () => {
               {/* Trend lines */}
               <div className="h-32 w-full pt-1">
                 <svg className="w-full h-full overflow-visible" viewBox="0 0 240 90">
-                  <path d="M 10 70 Q 70 30 130 50 T 230 75" fill="none" stroke="#94A3B8" strokeWidth="1.8" strokeDasharray="3 3" />
-                  <path d="M 10 75 Q 70 45 130 60 T 230 80" fill="none" stroke="#F59E0B" strokeWidth="2" />
-                  <path d="M 10 80 Q 70 60 130 70 T 230 85" fill="none" stroke="#10B981" strokeWidth="2.5" />
+                  <path
+                    d={TREND_DATA[activeTrendTab].baseline}
+                    fill="none"
+                    stroke="#94A3B8"
+                    strokeWidth="1.8"
+                    strokeDasharray="3 3"
+                  />
+                  <path
+                    d={TREND_DATA[activeTrendTab].rule}
+                    fill="none"
+                    stroke="#F59E0B"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d={TREND_DATA[activeTrendTab].predictive}
+                    fill="none"
+                    stroke="#10B981"
+                    strokeWidth="2.5"
+                  />
                 </svg>
                 <div className="flex justify-between text-[7px] font-mono text-slate-400">
                   <span>12:00 PM</span>
@@ -466,7 +552,7 @@ export const BenchmarkCentreView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                  {recentBenchmarkRuns.map((rbr, idx) => (
+                  {runs.map((rbr, idx) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="py-2 px-2 text-slate-500 whitespace-nowrap">{rbr.dateTime}</td>
                       <td className="py-2 px-2 font-sans text-slate-800">{rbr.scenario}</td>
@@ -496,8 +582,9 @@ export const BenchmarkCentreView: React.FC = () => {
             <span className="text-xs font-bold text-slate-900 block">Quick Actions</span>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
-                onClick={() => {}}
-                className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700"
+                onClick={runBenchmark}
+                disabled={running}
+                className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700 disabled:opacity-50"
               >
                 <Play className="h-4 w-4 text-emerald-600 mb-1" />
                 <span className="text-[10px]">Run Benchmark</span>
@@ -510,14 +597,15 @@ export const BenchmarkCentreView: React.FC = () => {
                 <span className="text-[10px]">Export Report</span>
               </button>
               <button
-                onClick={() => {}}
-                className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700"
+                onClick={runBenchmark}
+                disabled={running}
+                className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700 disabled:opacity-50"
               >
                 <BarChart2 className="h-4 w-4 text-blue-600 mb-1" />
                 <span className="text-[10px]">Compare Models</span>
               </button>
               <button
-                onClick={() => {}}
+                onClick={() => setActivePage('logs')}
                 className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700"
               >
                 <FileText className="h-4 w-4 text-purple-600 mb-1" />
@@ -564,8 +652,11 @@ export const BenchmarkCentreView: React.FC = () => {
                   </select>
                 </div>
               </div>
-              <button className="w-full rounded-lg bg-emerald-700 py-2 text-xs font-bold text-white hover:bg-emerald-800">
-                Apply Settings
+              <button
+                onClick={applySettings}
+                className="w-full rounded-lg bg-emerald-700 py-2 text-xs font-bold text-white hover:bg-emerald-800"
+              >
+                {settingsApplied ? 'Settings Applied' : 'Apply Settings'}
               </button>
             </div>
           </div>

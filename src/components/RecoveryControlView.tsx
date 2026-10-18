@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Calendar,
   ChevronDown,
+  ChevronRight,
   AlertTriangle,
   Play,
   Pause,
@@ -29,11 +30,22 @@ export const RecoveryControlView: React.FC = () => {
     isSimulating,
     injectFault,
     resetAll,
+    activeFault,
+    faultSeverity,
+    setActivePage,
   } = useMicrogrid();
 
   const [dateRange] = useState('Apr 28, 2025 – May 4, 2025');
   const [timeView] = useState('Day');
   const [autoRecovery, setAutoRecovery] = useState(true);
+  const [paused, setPaused] = useState(false);
+
+  const shortageKw = Math.max(0, telemetry.totalDemand - telemetry.totalSupply);
+  const impactLevel = faultSeverity >= 70 ? 'High' : faultSeverity >= 40 ? 'Medium' : 'Low';
+  const faultTitle = activeFault ? activeFault.name : 'Solar Generation Loss';
+  const faultDescription = activeFault
+    ? `${activeFault.impactSummary} Detected at: May 3, 2025 – 12:14 PM`
+    : 'Solar output dropped by 60% due to cloud cover / panel fault (simulated). Detected at: May 3, 2025 – 12:14 PM';
 
   const recoveryPipelineSteps = [
     {
@@ -185,8 +197,16 @@ export const RecoveryControlView: React.FC = () => {
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
               <Sun className="h-3.5 w-3.5 text-emerald-600" /> Solar Generation
             </div>
-            <div className="text-xl font-bold text-slate-900 font-mono mt-1">128 kW</div>
-            <div className="text-[10px] text-emerald-600">↑ 12% vs. prev 7d</div>
+            <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+              {telemetry.solarGeneration} kW
+            </div>
+            <div
+              className={`text-[10px] ${
+                telemetry.solarPrevChange >= 0 ? 'text-emerald-600' : 'text-rose-600'
+              }`}
+            >
+              {telemetry.solarPrevChange >= 0 ? '↑' : '↓'} {Math.abs(telemetry.solarPrevChange)}% vs. prev 7d
+            </div>
           </div>
           <div className="w-12 h-6">
             <svg viewBox="0 0 50 25" className="w-full h-full">
@@ -201,8 +221,10 @@ export const RecoveryControlView: React.FC = () => {
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
               <Zap className="h-3.5 w-3.5 text-emerald-600" /> Total Demand
             </div>
-            <div className="text-xl font-bold text-slate-900 font-mono mt-1">105 kW</div>
-            <div className="text-[10px] text-emerald-600">↑ 6% vs. prev 7d</div>
+            <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+              {telemetry.totalDemand} kW
+            </div>
+            <div className="text-[10px] text-emerald-600">↑ {telemetry.demandPrevChange}% vs. prev 7d</div>
           </div>
           <div className="w-12 h-6">
             <svg viewBox="0 0 50 25" className="w-full h-full">
@@ -217,8 +239,10 @@ export const RecoveryControlView: React.FC = () => {
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
               <BatteryCharging className="h-3.5 w-3.5 text-emerald-600" /> Battery SoC
             </div>
-            <div className="text-xl font-bold text-slate-900 font-mono mt-1">76%</div>
-            <div className="text-[10px] text-emerald-600">↑ 5% vs. prev 7d</div>
+            <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+              {telemetry.batterySoc}%
+            </div>
+            <div className="text-[10px] text-emerald-600">↑ {telemetry.batterySocChange}% vs. prev 7d</div>
           </div>
           <div className="w-12 h-6">
             <svg viewBox="0 0 50 25" className="w-full h-full">
@@ -233,9 +257,16 @@ export const RecoveryControlView: React.FC = () => {
             <Radio className="h-3.5 w-3.5 text-emerald-600" /> Grid Status
           </div>
           <div className="text-base font-bold text-slate-900 flex items-center gap-1.5 mt-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Connected
+            <span
+              className={`h-2 w-2 rounded-full ${
+                telemetry.gridStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'
+              }`}
+            />{' '}
+            {telemetry.gridStatus === 'connected' ? 'Connected' : 'Islanded'}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono">0 kW (import)</div>
+          <div className="text-[10px] text-slate-400 font-mono">
+            {telemetry.gridPower} kW (import)
+          </div>
         </div>
 
         {/* Critical Load Service */}
@@ -243,8 +274,12 @@ export const RecoveryControlView: React.FC = () => {
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Critical Load Service
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono mt-1">100%</div>
-          <div className="text-[10px] text-slate-500">→ +0% vs. prev 7d</div>
+          <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+            {telemetry.criticalLoadsServed}%
+          </div>
+          <div className="text-[10px] text-slate-500">
+            {telemetry.unservedEnergyKwh > 0 ? `↓ ${telemetry.unservedEnergyKwh} kWh unserved` : '→ +0% vs. prev 7d'}
+          </div>
         </div>
       </div>
 
@@ -261,27 +296,23 @@ export const RecoveryControlView: React.FC = () => {
                   Current Fault Scenario
                 </span>
               </div>
-              <h2 className="text-base font-bold text-slate-900 mt-0.5">
-                Solar Generation Loss
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Solar output dropped by 60% due to cloud cover / panel fault (simulated). Detected at: May 3, 2025 – 12:14 PM
-              </p>
+              <h2 className="text-base font-bold text-slate-900 mt-0.5">{faultTitle}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{faultDescription}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-center">
               <span className="text-[10px] text-slate-400 block">Generation Drop</span>
-              <span className="font-mono text-base font-bold text-rose-600">-60%</span>
+              <span className="font-mono text-base font-bold text-rose-600">-{faultSeverity}%</span>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-center">
               <span className="text-[10px] text-slate-400 block">Estimated Shortage</span>
-              <span className="font-mono text-base font-bold text-amber-600">18 kW</span>
+              <span className="font-mono text-base font-bold text-amber-600">{shortageKw} kW</span>
             </div>
             <div className="rounded-xl border border-rose-100 bg-rose-50/70 px-4 py-2 text-center">
               <span className="text-[10px] text-rose-800 block">Impact Level</span>
-              <span className="font-sans text-xs font-bold text-rose-700">High</span>
+              <span className="font-sans text-xs font-bold text-rose-700">{impactLevel}</span>
             </div>
           </div>
         </div>
@@ -293,39 +324,46 @@ export const RecoveryControlView: React.FC = () => {
           Recovery Pipeline
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {recoveryPipelineSteps.map((step) => {
+        <div className="flex flex-col gap-2 md:flex-row md:items-stretch">
+          {recoveryPipelineSteps.map((step, index) => {
             const isCompleted = step.status === 'completed';
             const isActive = step.status === 'active';
 
             return (
-              <div
-                key={step.num}
-                className={`rounded-xl border p-3.5 transition-all ${
-                  isActive
-                    ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-500'
-                    : isCompleted
-                    ? 'border-slate-200 bg-slate-50/50'
-                    : 'border-slate-100 bg-white opacity-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                      isCompleted
-                        ? 'bg-emerald-600 text-white'
-                        : isActive
-                        ? 'bg-emerald-600 text-white animate-pulse'
-                        : 'bg-slate-200 text-slate-600'
-                    }`}
-                  >
-                    {isCompleted ? '✓' : step.num}
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400">{step.time}</span>
+              <React.Fragment key={step.num}>
+                <div
+                  className={`flex-1 rounded-xl border p-3.5 transition-all ${
+                    isActive
+                      ? 'border-emerald-500 bg-emerald-50/20 ring-1 ring-emerald-500'
+                      : isCompleted
+                      ? 'border-slate-200 bg-slate-50/50'
+                      : 'border-slate-100 bg-white opacity-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                        isCompleted
+                          ? 'bg-emerald-600 text-white'
+                          : isActive
+                          ? 'bg-emerald-600 text-white animate-pulse'
+                          : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {isCompleted ? '✓' : step.num}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">{step.time}</span>
+                  </div>
+                  <div className="text-xs font-bold text-slate-900">{step.title}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{step.subtitle}</div>
                 </div>
-                <div className="text-xs font-bold text-slate-900">{step.title}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">{step.subtitle}</div>
-              </div>
+
+                {index < recoveryPipelineSteps.length - 1 && (
+                  <div className="hidden shrink-0 items-center justify-center text-slate-300 md:flex">
+                    <ChevronRight className="h-4 w-4" />
+                  </div>
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -605,11 +643,13 @@ export const RecoveryControlView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
-                onClick={() => {}}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 p-2 font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={() => setPaused(!paused)}
+                className={`flex items-center justify-center gap-1.5 rounded-lg border p-2 font-semibold hover:bg-slate-50 ${
+                  paused ? 'border-amber-300 bg-amber-50/60 text-amber-800' : 'border-slate-200 text-slate-700'
+                }`}
               >
                 <Pause className="h-3.5 w-3.5 text-slate-600" />
-                <span>Pause</span>
+                <span>{paused ? 'Paused' : 'Pause'}</span>
               </button>
               <button
                 onClick={resetAll}
@@ -630,13 +670,20 @@ export const RecoveryControlView: React.FC = () => {
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
               <span className="font-semibold">Auto Recovery</span>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                ON
-              </span>
+              <button
+                onClick={() => setAutoRecovery(!autoRecovery)}
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors ${
+                  autoRecovery
+                    ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                }`}
+              >
+                {autoRecovery ? 'ON' : 'OFF'}
+              </button>
             </div>
 
             <button
-              onClick={() => {}}
+              onClick={() => setActivePage('settings')}
               className="w-full text-left text-[11px] text-slate-500 hover:text-slate-900 flex items-center gap-1.5 pt-1"
             >
               <Sliders className="h-3.5 w-3.5" />

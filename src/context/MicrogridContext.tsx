@@ -22,6 +22,8 @@ import {
 } from '../data/initialData';
 
 export type NavigationPage =
+  | 'home'
+  | 'login'
   | 'overview'
   | 'twin'
   | 'faults'
@@ -32,9 +34,24 @@ export type NavigationPage =
   | 'settings'
   | 'help';
 
+/**
+ * Mock credentials for the public demo workspace. There is no backend in this
+ * prototype — these values are validated client-side only, so the dashboard can
+ * sit behind a realistic sign-in screen without any server component.
+ */
+export const DEMO_CREDENTIALS = {
+  email: 'operator@gridheal.lab',
+  password: 'GridHeal#2026',
+} as const;
+
 interface MicrogridContextType {
   activePage: NavigationPage;
   setActivePage: (page: NavigationPage) => void;
+  currentUser: { email: string; name: string } | null;
+  signIn: (email: string, password: string) => { ok: boolean; error?: string };
+  signOut: () => void;
+  pendingPage: NavigationPage | null;
+  requestPage: (page: NavigationPage) => void;
   telemetry: MicrogridTelemetry;
   pipelineSteps: RecoveryStep[];
   alerts: ActiveAlert[];
@@ -65,7 +82,9 @@ interface MicrogridContextType {
 const MicrogridContext = createContext<MicrogridContextType | undefined>(undefined);
 
 export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activePage, setActivePage] = useState<NavigationPage>('overview');
+  const [activePage, setActivePage] = useState<NavigationPage>('home');
+  const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null);
+  const [pendingPage, setPendingPage] = useState<NavigationPage | null>(null);
   const [telemetry, setTelemetry] = useState<MicrogridTelemetry>(INITIAL_TELEMETRY);
   const [pipelineSteps, setPipelineSteps] = useState<RecoveryStep[]>(INITIAL_PIPELINE_STEPS);
   const [alerts, setAlerts] = useState<ActiveAlert[]>(INITIAL_ALERTS);
@@ -139,6 +158,51 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, []);
 
+  // --- Mock authentication (client-side only, no backend) ---
+  const goToPage = useCallback((page: NavigationPage) => {
+    setActivePage(page);
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const signIn = useCallback(
+    (email: string, password: string): { ok: boolean; error?: string } => {
+      const normalized = email.trim().toLowerCase();
+      if (normalized !== DEMO_CREDENTIALS.email) {
+        return {
+          ok: false,
+          error: 'No workspace found for that email. Use the demo credentials below.',
+        };
+      }
+      if (password !== DEMO_CREDENTIALS.password) {
+        return { ok: false, error: 'Incorrect password. Use the demo credentials below.' };
+      }
+      setCurrentUser({ email: DEMO_CREDENTIALS.email, name: 'Samarth Darak' });
+      const target = pendingPage ?? 'overview';
+      setPendingPage(null);
+      goToPage(target);
+      return { ok: true };
+    },
+    [pendingPage, goToPage]
+  );
+
+  const signOut = useCallback(() => {
+    setCurrentUser(null);
+    setPendingPage(null);
+    goToPage('login');
+  }, [goToPage]);
+
+  // Marketing-page entry points into the dashboard pass through the sign-in gate.
+  const requestPage = useCallback(
+    (page: NavigationPage) => {
+      if (page === 'home' || page === 'login' || currentUser) {
+        goToPage(page);
+        return;
+      }
+      setPendingPage(page);
+      goToPage('login');
+    },
+    [currentUser, goToPage]
+  );
   // Inject a controlled fault
   const injectFault = useCallback((scenarioId: string, severity: number = 50, durationHours: number = 2) => {
     const scenario = FAULT_SCENARIOS.find((s) => s.id === scenarioId) || FAULT_SCENARIOS[0];
@@ -464,6 +528,11 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     () => ({
       activePage,
       setActivePage,
+      currentUser,
+      signIn,
+      signOut,
+      pendingPage,
+      requestPage,
       telemetry,
       pipelineSteps,
       alerts,
@@ -492,6 +561,11 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }),
     [
       activePage,
+      currentUser,
+      signIn,
+      signOut,
+      pendingPage,
+      requestPage,
       telemetry,
       pipelineSteps,
       alerts,

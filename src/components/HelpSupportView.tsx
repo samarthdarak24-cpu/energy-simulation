@@ -245,7 +245,10 @@ export const HelpSupportView: React.FC = () => {
                 {/* Email */}
                 <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-start justify-between">
                   <div>
-                    <div className="font-bold text-slate-900">Email Us</div>
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-emerald-600" />
+                      Email Us
+                    </div>
                     <div className="text-[11px] text-emerald-700 font-mono mt-0.5">
                       support@gridheal.in
                     </div>
@@ -259,7 +262,10 @@ export const HelpSupportView: React.FC = () => {
                 {/* Live Chat */}
                 <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-start justify-between">
                   <div>
-                    <div className="font-bold text-slate-900">Live Chat</div>
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
+                      Live Chat
+                    </div>
                     <div className="text-[10px] text-slate-500 mt-0.5">
                       Available Mon – Fri, 9:00 AM – 6:00 PM
                     </div>
@@ -273,7 +279,10 @@ export const HelpSupportView: React.FC = () => {
                 {/* Documentation */}
                 <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-start justify-between">
                   <div>
-                    <div className="font-bold text-slate-900">Documentation</div>
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+                      Documentation
+                    </div>
                     <div className="text-[10px] text-slate-500 mt-0.5">
                       Read our detailed guides and FAQs for quick answers.
                     </div>
@@ -284,7 +293,10 @@ export const HelpSupportView: React.FC = () => {
                 {/* GitHub Issues */}
                 <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-start justify-between">
                   <div>
-                    <div className="font-bold text-slate-900">GitHub Issues</div>
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <Github className="h-3.5 w-3.5 text-emerald-600" />
+                      GitHub Issues
+                    </div>
                     <div className="text-[10px] text-slate-500 mt-0.5">
                       Report bugs or suggest features.
                     </div>

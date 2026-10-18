@@ -18,12 +18,17 @@ import { SettingsView } from './components/SettingsView';
 import { HelpSupportView } from './components/HelpSupportView';
 import { FaultModal } from './components/FaultModal';
 import { ExportReportModal } from './components/ExportReportModal';
+import { HomePage } from './home/HomePage';
 
 function MainAppContent() {
   const { activePage } = useMicrogrid();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [faultModalOpen, setFaultModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+
+  if (activePage === 'home') {
+    return <HomePage />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-slate-800">

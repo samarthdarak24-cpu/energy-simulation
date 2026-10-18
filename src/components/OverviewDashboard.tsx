@@ -198,28 +198,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
           </div>
 
-          {/* Supply & Demand Balance Strip */}
-          <div className="grid grid-cols-3 gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-center sm:text-left">
-            <div className="sm:px-3">
-              <span className="text-[11px] font-medium text-slate-500">Total Supply</span>
-              <div className="text-lg font-bold text-slate-900 font-mono tabular-nums">
-                {telemetry.totalSupply} kW
-              </div>
-            </div>
-            <div className="sm:px-3 border-x border-slate-200">
-              <span className="text-[11px] font-medium text-slate-500">Grid Import</span>
-              <div className="text-lg font-bold text-slate-900 font-mono tabular-nums">
-                {telemetry.gridImport} kW
-              </div>
-            </div>
-            <div className="sm:px-3">
-              <span className="text-[11px] font-medium text-slate-500">Unserved Energy</span>
-              <div className="text-lg font-bold text-slate-900 font-mono tabular-nums">
-                {telemetry.unservedEnergyKwh} kWh
-              </div>
-            </div>
-          </div>
-
           {/* Row 2: Solar Generation vs Demand (kW) Stacked Bar Chart */}
           <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4">
@@ -856,6 +834,28 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
         {/* Right 3 Columns: System Health & Quick Actions */}
         <div className="xl:col-span-3 space-y-6">
+          {/* Supply Summary — matches reference right-rail stack */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs divide-y divide-slate-100">
+            <div className="pb-2.5">
+              <span className="text-[11px] font-medium text-slate-500">Total Supply</span>
+              <div className="text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {telemetry.totalSupply} kW
+              </div>
+            </div>
+            <div className="py-2.5">
+              <span className="text-[11px] font-medium text-slate-500">Grid Import</span>
+              <div className="text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {telemetry.gridImport} kW
+              </div>
+            </div>
+            <div className="pt-2.5">
+              <span className="text-[11px] font-medium text-slate-500">Unserved Energy</span>
+              <div className="text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {telemetry.unservedEnergyKwh} kWh
+              </div>
+            </div>
+          </div>
+
           {/* System Health Card */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
             <h2 className="text-sm font-bold text-slate-900 mb-3">System Health</h2>

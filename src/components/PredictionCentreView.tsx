@@ -16,25 +16,105 @@ import {
 } from 'lucide-react';
 import { useMicrogrid } from '../context/MicrogridContext';
 
+type PeriodTab = 'Day' | 'Week' | 'Month';
+
+interface PeriodConfig {
+  labels: string[];
+  solarPath: string;
+  demandPath: string;
+  actualPath: string;
+  imbalance: { short: string; surplus: number; shortage: number }[];
+}
+
+const PERIOD_CONFIG: Record<PeriodTab, PeriodConfig> = {
+  Day: {
+    labels: ['6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM', '12 AM'],
+    solarPath: 'M 50 152 Q 90 120 150 40 T 260 45 T 410 142',
+    demandPath: 'M 50 120 Q 110 118 170 100 T 290 45 T 410 95',
+    actualPath: 'M 50 148 Q 95 118 155 44 T 255 48',
+    imbalance: [
+      { short: '6AM', surplus: 8, shortage: 14 },
+      { short: '9AM', surplus: 34, shortage: 6 },
+      { short: '12PM', surplus: 96, shortage: 4 },
+      { short: '3PM', surplus: 78, shortage: 8 },
+      { short: '6PM', surplus: 12, shortage: 42 },
+      { short: '9PM', surplus: 4, shortage: 28 },
+      { short: '12AM', surplus: 2, shortage: 10 },
+    ],
+  },
+  Week: {
+    labels: ['Apr 28', 'Apr 29', 'Apr 30', 'May 1', 'May 2', 'May 3', 'May 4'],
+    solarPath: 'M 50 130 Q 110 80 170 50 T 290 60 T 410 70',
+    demandPath: 'M 50 110 Q 110 115 170 95 T 290 50 T 410 80',
+    actualPath: 'M 50 132 Q 110 82 170 52 T 260 55',
+    imbalance: [
+      { short: '28', surplus: 100, shortage: 20 },
+      { short: '29', surplus: 120, shortage: 25 },
+      { short: '30', surplus: 115, shortage: 15 },
+      { short: '1', surplus: 110, shortage: 35 },
+      { short: '2', surplus: 95, shortage: 42 },
+      { short: '3', surplus: 130, shortage: 30 },
+      { short: '4', surplus: 145, shortage: 18 },
+    ],
+  },
+  Month: {
+    labels: ['Apr 7', 'Apr 14', 'Apr 21', 'Apr 28', 'May 5', 'May 12', 'May 19'],
+    solarPath: 'M 50 118 Q 130 66 220 62 T 410 88',
+    demandPath: 'M 50 100 Q 120 110 210 85 T 410 74',
+    actualPath: 'M 50 120 Q 128 70 215 66 T 320 72',
+    imbalance: [
+      { short: '7', surplus: 420, shortage: 90 },
+      { short: '14', surplus: 505, shortage: 120 },
+      { short: '21', surplus: 470, shortage: 80 },
+      { short: '28', surplus: 530, shortage: 145 },
+      { short: '5', surplus: 490, shortage: 110 },
+      { short: '12', surplus: 560, shortage: 95 },
+      { short: '19', surplus: 610, shortage: 70 },
+    ],
+  },
+};
+
+const COMPARISON_PATHS: Record<'solar' | 'demand' | 'shortage', { actual: string; forecast: string }> = {
+  solar: {
+    actual: 'M 10 70 Q 25 20 40 70 T 70 70 T 100 70 T 130 70 T 160 70 T 190 70',
+    forecast: 'M 10 70 Q 25 15 40 70 T 70 70 T 100 70 T 130 70 T 160 70 T 190 70',
+  },
+  demand: {
+    actual: 'M 10 60 Q 25 35 40 60 T 70 60 T 100 60 T 130 60 T 160 60 T 190 60',
+    forecast: 'M 10 62 Q 25 30 40 62 T 70 62 T 100 62 T 130 62 T 160 62 T 190 62',
+  },
+  shortage: {
+    actual: 'M 10 72 Q 25 55 40 72 T 70 72 T 100 72 T 130 72 T 160 72 T 190 72',
+    forecast: 'M 10 74 Q 25 50 40 74 T 70 74 T 100 74 T 130 74 T 160 74 T 190 74',
+  },
+};
+
 export const PredictionCentreView: React.FC = () => {
-  const { exportAuditCsv } = useMicrogrid();
+  const { exportAuditCsv, setActivePage } = useMicrogrid();
 
   const [dateRange] = useState('Apr 28, 2025 – May 4, 2025');
-  const [periodTab, setPeriodTab] = useState<'Day' | 'Week' | 'Month'>('Week');
+  const [periodTab, setPeriodTab] = useState<PeriodTab>('Week');
   const [comparisonTab, setComparisonTab] = useState<'solar' | 'demand' | 'shortage'>('solar');
   const [forecastHorizon, setForecastHorizon] = useState('7 days');
   const [predictionInterval, setPredictionInterval] = useState('1 hour');
   const [modelType, setModelType] = useState('Hybrid (Time Series + ML)');
+  const [updating, setUpdating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState('May 2, 2025 10:15 AM');
 
-  const forecastDays = [
-    { day: 'Apr 28', solar: 80, demand: 95, surplus: 100, shortage: 20 },
-    { day: 'Apr 29', solar: 105, demand: 110, surplus: 120, shortage: 25 },
-    { day: 'Apr 30', solar: 140, demand: 120, surplus: 115, shortage: 15 },
-    { day: 'May 1', solar: 115, demand: 135, surplus: 110, shortage: 35 },
-    { day: 'May 2', solar: 128, demand: 142, surplus: 95, shortage: 42 },
-    { day: 'May 3', solar: 95, demand: 125, surplus: 130, shortage: 30 },
-    { day: 'May 4', solar: 130, demand: 115, surplus: 145, shortage: 18 },
-  ];
+  const period = PERIOD_CONFIG[periodTab];
+  const comparison = COMPARISON_PATHS[comparisonTab];
+  const imbalanceMax = Math.max(
+    ...period.imbalance.map((point) => Math.max(point.surplus, point.shortage))
+  );
+
+  const updateForecast = () => {
+    if (updating) return;
+    setUpdating(true);
+    setTimeout(() => {
+      setUpdating(false);
+      setLastUpdated('Just now');
+    }, 1100);
+  };
 
   const recentForecastUpdates = [
     {
@@ -231,7 +311,7 @@ export const PredictionCentreView: React.FC = () => {
 
                   {/* Solar Forecast (green dashed) */}
                   <path
-                    d="M 50 130 Q 110 80 170 50 T 290 60 T 410 70"
+                    d={period.solarPath}
                     fill="none"
                     stroke="#10B981"
                     strokeWidth="2"
@@ -240,7 +320,7 @@ export const PredictionCentreView: React.FC = () => {
 
                   {/* Demand Forecast (slate dashed) */}
                   <path
-                    d="M 50 110 Q 110 115 170 95 T 290 50 T 410 80"
+                    d={period.demandPath}
                     fill="none"
                     stroke="#475569"
                     strokeWidth="2"
@@ -249,7 +329,7 @@ export const PredictionCentreView: React.FC = () => {
 
                   {/* Actual Curve (solid green) */}
                   <path
-                    d="M 50 132 Q 110 82 170 52 T 260 55"
+                    d={period.actualPath}
                     fill="none"
                     stroke="#047857"
                     strokeWidth="2.5"
@@ -268,15 +348,15 @@ export const PredictionCentreView: React.FC = () => {
                   </g>
 
                   {/* X Labels */}
-                  {forecastDays.map((fd, i) => (
+                  {period.labels.map((label, i) => (
                     <text
-                      key={fd.day}
+                      key={label}
                       x={50 + i * 60}
                       y="174"
                       textAnchor="middle"
                       className="text-[9px] fill-slate-400 font-medium"
                     >
-                      {fd.day}
+                      {label}
                     </text>
                   ))}
                 </svg>
@@ -380,13 +460,13 @@ export const PredictionCentreView: React.FC = () => {
               <div className="h-28 w-full pt-1">
                 <svg className="w-full h-full overflow-visible" viewBox="0 0 200 80">
                   <path
-                    d="M 10 70 Q 25 20 40 70 T 70 70 T 100 70 T 130 70 T 160 70 T 190 70"
+                    d={comparison.actual}
                     fill="none"
                     stroke="#10B981"
                     strokeWidth="2"
                   />
                   <path
-                    d="M 10 70 Q 25 15 40 70 T 70 70 T 100 70 T 130 70 T 160 70 T 190 70"
+                    d={comparison.forecast}
                     fill="none"
                     stroke="#94A3B8"
                     strokeWidth="1.5"
@@ -456,19 +536,19 @@ export const PredictionCentreView: React.FC = () => {
 
               {/* Bar SVG */}
               <div className="h-28 flex items-end justify-between gap-1 pt-2">
-                {forecastDays.map((fd) => (
-                  <div key={fd.day} className="flex-1 flex flex-col items-center gap-1">
+                {period.imbalance.map((point) => (
+                  <div key={point.short} className="flex-1 flex flex-col items-center gap-1">
                     <div className="w-full flex items-end justify-center gap-1 h-20">
                       <div
                         className="w-2 bg-emerald-500 rounded-t-xs"
-                        style={{ height: `${(fd.surplus / 150) * 100}%` }}
+                        style={{ height: `${(point.surplus / imbalanceMax) * 100}%` }}
                       />
                       <div
                         className="w-2 bg-amber-400 rounded-t-xs"
-                        style={{ height: `${(fd.shortage / 150) * 100}%` }}
+                        style={{ height: `${(point.shortage / imbalanceMax) * 100}%` }}
                       />
                     </div>
-                    <span className="text-[7px] font-mono text-slate-400">{fd.day.split(' ')[1]}</span>
+                    <span className="text-[7px] font-mono text-slate-400">{point.short}</span>
                   </div>
                 ))}
               </div>
@@ -541,11 +621,15 @@ export const PredictionCentreView: React.FC = () => {
               </div>
 
               <button
-                onClick={() => {}}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all"
+                onClick={updateForecast}
+                disabled={updating}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all disabled:opacity-70"
               >
-                <span>Update Forecast</span>
+                <span>{updating ? 'Updating...' : 'Update Forecast'}</span>
               </button>
+              <p className="text-[10px] text-slate-400 text-center">
+                Last updated: {lastUpdated}
+              </p>
             </div>
           </div>
 
@@ -554,14 +638,15 @@ export const PredictionCentreView: React.FC = () => {
             <span className="text-xs font-bold text-slate-900 block">Quick Actions</span>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
-                onClick={() => {}}
-                className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700"
+                onClick={updateForecast}
+                disabled={updating}
+                className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700 disabled:opacity-50"
               >
                 <TrendingUp className="h-4 w-4 text-emerald-600 mb-1" />
                 <span className="text-[10px]">Run Forecast</span>
               </button>
               <button
-                onClick={() => {}}
+                onClick={() => setActivePage('benchmark')}
                 className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700"
               >
                 <BarChart2 className="h-4 w-4 text-blue-600 mb-1" />
@@ -575,7 +660,7 @@ export const PredictionCentreView: React.FC = () => {
                 <span className="text-[10px]">Export Report</span>
               </button>
               <button
-                onClick={() => {}}
+                onClick={() => setActivePage('logs')}
                 className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700"
               >
                 <Eye className="h-4 w-4 text-purple-600 mb-1" />
