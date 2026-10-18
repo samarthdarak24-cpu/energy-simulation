@@ -1,6 +1,32 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    /* Forest-first palette — no blue, no purple */
+    --gh-forest-900: #0b2a1d;
+    --gh-forest-800: #103d2b;
+    --gh-forest-700: #15533a;
+    --gh-forest-600: #1b5e36;
+    --gh-forest-500: #2e7d4f;
+    --gh-brand: #3e984a;
+    --gh-brand-soft: #6fb878;
+    --gh-sage: #eaf5ec;
+    --gh-mint: #f1f8f2;
+    --gh-cream: #f7f5f0;
+    --gh-sand: #ede6da;
+    --gh-clay: #b9683f;
+    --gh-gold: #c79a3c;
+    --gh-ink: #16241e;
+    --gh-ink-soft: #324339;
+    --gh-muted: #5b6b62;
+    --gh-line: #e4e9e4;
+    --gh-line-strong: #d4ddd6;
+
+    --gh-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --gh-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --gh-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+  }
+
   html {
     scroll-behavior: smooth;
   }
@@ -9,6 +35,13 @@
     html {
       scroll-behavior: auto;
     }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
   }
 
   section[id] {
@@ -16,50 +49,354 @@
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: var(--gh-sans);
+    color: var(--gh-ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  
+
+  ::selection {
+    background: rgba(62, 152, 74, 0.22);
+    color: var(--gh-forest-800);
+  }
+
   .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--gh-mono);
   }
 }
 
-/* Custom pulse animations for energy flow */
+/* Forest-tinted scrollbar (no blue/slate) */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9d8cd;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a9c2b2;
+  background-clip: padding-box;
+}
+
+/* ---- Energy flow dashes (kept from original) ---- */
 @keyframes flow-dash {
   to {
     stroke-dashoffset: -30;
   }
 }
-
 .animate-flow-dash {
   animation: flow-dash 1.2s linear infinite;
 }
-
 @keyframes reverse-flow-dash {
   to {
     stroke-dashoffset: 30;
   }
 }
-
 .animate-reverse-flow-dash {
   animation: reverse-flow-dash 1.2s linear infinite;
 }
 
-/* Clean custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@layer components {
+  /* Display / editorial type */
+  .gh-display {
+    font-family: var(--gh-display);
+    letter-spacing: -0.022em;
+    font-weight: 600;
+    font-optical-sizing: auto;
+  }
+  .gh-display-soft {
+    font-family: var(--gh-display);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* Eyebrow pill with breathing dot */
+  .gh-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid #cfe6d5;
+    background: rgba(234, 245, 236, 0.72);
+    padding: 0.32rem 0.8rem;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #1b5e36;
+  }
+  .gh-eyebrow--light {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.1);
+    color: #d7f0dd;
+  }
+  .gh-eyebrow .gh-dot {
+    position: relative;
+    height: 6px;
+    width: 6px;
+    flex: none;
+  }
+  .gh-eyebrow .gh-dot::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: var(--gh-brand);
+  }
+  .gh-eyebrow .gh-dot::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 9999px;
+    background: rgba(62, 152, 74, 0.45);
+    animation: gh-ping 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Cards with soft, layered depth + moss hover glow */
+  .gh-card {
+    background: #fff;
+    border: 1px solid var(--gh-line);
+    border-radius: 1.35rem;
+    box-shadow:
+      0 1px 2px rgba(16, 61, 43, 0.04),
+      0 14px 34px -26px rgba(16, 61, 43, 0.32);
+    transition:
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.45s ease;
+  }
+  .gh-card:hover {
+    transform: translateY(-5px);
+    border-color: #bfd9c6;
+    box-shadow:
+      0 1px 2px rgba(16, 61, 43, 0.06),
+      0 30px 56px -30px rgba(16, 61, 43, 0.45);
+  }
+
+  /* Buttons with shimmer sweep */
+  .gh-btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.9rem;
+    font-weight: 600;
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+  .gh-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(62, 152, 74, 0.35);
+  }
+  .gh-btn-primary {
+    background: linear-gradient(180deg, #2e7d4f 0%, #1b5e36 100%);
+    color: #fff;
+    box-shadow: 0 12px 26px -16px rgba(27, 94, 54, 0.8);
+  }
+  .gh-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 38px -16px rgba(27, 94, 54, 0.85);
+  }
+  .gh-btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -130%;
+    width: 55%;
+    height: 100%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    transform: skewX(-18deg);
+    transition: left 0.75s ease;
+  }
+  .gh-btn-primary:hover::after {
+    left: 150%;
+  }
+  .gh-btn-secondary {
+    background: #fff;
+    border: 1px solid var(--gh-line);
+    color: var(--gh-ink);
+  }
+  .gh-btn-secondary:hover {
+    transform: translateY(-2px);
+    border-color: #c6d3c9;
+    background: var(--gh-mint);
+  }
+  .gh-btn-ghost {
+    background: transparent;
+    color: var(--gh-forest-600);
+  }
+  .gh-btn-ghost:hover {
+    background: var(--gh-sage);
+  }
+
+  /* Animated aurora / mesh backdrop */
+  .gh-aurora {
+    position: absolute;
+    inset: -25%;
+    background:
+      radial-gradient(38% 42% at 28% 30%, rgba(62, 152, 74, 0.6), transparent 60%),
+      radial-gradient(44% 46% at 72% 38%, rgba(46, 125, 79, 0.5), transparent 62%),
+      radial-gradient(50% 52% at 50% 82%, rgba(159, 225, 203, 0.42), transparent 62%);
+    filter: blur(34px);
+    animation: gh-aurora 18s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .gh-aurora--slow {
+    animation-duration: 26s;
+  }
+
+  /* Floating ambient glow blob */
+  .gh-glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    pointer-events: none;
+  }
+
+  /* Fine film-grain for a hand-made, non-AI feel */
+  .gh-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Reveal-on-scroll — progressive enhancement.
+     Content is visible by DEFAULT (opacity:1). Only once JS has loaded
+     (html.js, set synchronously in <head> before paint) do we hide the
+     elements and reveal them on scroll. This guarantees a JS/observer
+     failure can never blank the page. */
+  .gh-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition:
+      opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html.js .gh-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  html.js .gh-reveal--blur {
+    transform: translateY(24px) scale(0.985);
+    filter: blur(6px);
+  }
+  html.js .gh-reveal--scale {
+    transform: translateY(10px) scale(0.96);
+  }
+  /* The visible state MUST outrank `html.js .gh-reveal` (higher specificity),
+     otherwise adding .is-visible can never override the hidden start state. */
+  html.js .gh-reveal.is-visible,
+  .gh-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Section divider with center diamond */
+  .gh-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--gh-line-strong);
+  }
+  .gh-divider::before,
+  .gh-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--gh-line-strong),
+      transparent
+    );
+  }
+  .gh-divider .gh-diamond {
+    width: 7px;
+    height: 7px;
+    rotate: 45deg;
+    background: var(--gh-brand);
+    opacity: 0.7;
+  }
+
+  /* Soft tinted photo frame used for URL imagery */
+  .gh-photo {
+    background-color: #103d2b;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+@keyframes gh-aurora {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(-2%, 4%, 0) scale(1.05);
+  }
+}
+@keyframes gh-ping {
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes gh-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.gh-float {
+  animation: gh-float 6s ease-in-out infinite;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
+@keyframes gh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* Respect reduced motion for the decorative loops */
+@media (prefers-reduced-motion: reduce) {
+  .gh-aurora,
+  .gh-float,
+  .gh-eyebrow .gh-dot::after {
+    animation: none !important;
+  }
 }

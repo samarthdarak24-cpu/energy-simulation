@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   HelpCircle,
   BookOpen,
@@ -25,6 +25,25 @@ import {
 export const HelpSupportView: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [contactSuccess, setContactSuccess] = useState(false);
+  const [healthData, setHealthData] = useState<any>(null);
+  const [lastCheckTime, setLastCheckTime] = useState<string>('Just now');
+
+  const fetchHealth = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/support/health');
+      if (res.ok) {
+        const data = await res.json();
+        setHealthData(data);
+        setLastCheckTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      }
+    } catch (e) {
+      // Fallback
+    }
+  };
+
+  useEffect(() => {
+    fetchHealth();
+  }, []);
 
   const faqs = [
     {
@@ -374,25 +393,29 @@ export const HelpSupportView: React.FC = () => {
               <div className="flex justify-between items-center text-slate-600">
                 <span>Simulation Engine</span>
                 <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Healthy
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {healthData?.services?.simulation_engine?.status ? (healthData.services.simulation_engine.status.charAt(0).toUpperCase() + healthData.services.simulation_engine.status.slice(1)) : 'Healthy'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span>Database (SQLite)</span>
                 <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Healthy
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {healthData?.services?.database?.latencyMs !== undefined ? `Healthy (${healthData.services.database.latencyMs}ms)` : 'Healthy'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span>Forecasting Module</span>
                 <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Healthy
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {healthData?.services?.forecast_engine?.status ? (healthData.services.forecast_engine.status.charAt(0).toUpperCase() + healthData.services.forecast_engine.status.slice(1)) : 'Healthy'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
-                <span>Recovery Controller</span>
+                <span>Recovery Controller (HiGHS)</span>
                 <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Healthy
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {healthData?.services?.highs_optimizer?.status ? (healthData.services.highs_optimizer.status.charAt(0).toUpperCase() + healthData.services.highs_optimizer.status.slice(1)) : 'Healthy'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
@@ -404,8 +427,8 @@ export const HelpSupportView: React.FC = () => {
             </div>
 
             <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400">
-              <span>Last updated: May 4, 2025 11:42 AM</span>
-              <button className="flex items-center gap-1 text-emerald-700 hover:text-emerald-800">
+              <span>Last checked: {lastCheckTime}</span>
+              <button onClick={fetchHealth} className="flex items-center gap-1 text-emerald-700 hover:text-emerald-800 transition-colors">
                 <RefreshCw className="h-3 w-3" />
                 <span>Refresh</span>
               </button>

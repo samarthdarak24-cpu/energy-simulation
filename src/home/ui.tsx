@@ -8,22 +8,22 @@ export const C = {
   evergreen: '#103D2B',
   soft: '#EAF5EC',
   mint: '#F1F8F2',
-  bg: '#F6F8F9',
+  bg: '#F7F5F0',
   card: '#FFFFFF',
   text: '#172535',
-  muted: '#64748B',
-  border: '#E2E8EB',
+  muted: '#5B6B62',
+  border: '#E4E9E4',
   amber: '#E9A12B',
   red: '#DC3545',
-  blue: '#3D79D8',
+  blue: '#3E6B4E',
 } as const;
 
 export const useGo = () => {
-  const { setActivePage } = useMicrogrid();
-  return (page: NavigationPage) => {
-    setActivePage(page);
-    window.scrollTo({ top: 0 });
-  };
+  const { requestPage } = useMicrogrid();
+  // Route every page request through the auth gate: public pages (home/login)
+  // and already-authenticated users pass through; everything else lands on the
+  // sign-in screen with the requested page saved as `pendingPage`.
+  return requestPage;
 };
 
 export const useReducedMotion = () => {
@@ -59,8 +59,10 @@ export const Section: React.FC<{
 export const Reveal: React.FC<{
   children: React.ReactNode;
   delay?: number;
+  variant?: 'up' | 'blur' | 'scale';
   className?: string;
-}> = ({ children, delay = 0, className = '' }) => {
+  as?: 'div' | 'li' | 'section' | 'article';
+}> = ({ children, delay = 0, variant = 'up', className = '', as = 'div' }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
 
@@ -81,21 +83,28 @@ export const Reveal: React.FC<{
       { threshold: 0.12, rootMargin: '0px 0px -60px 0px' }
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Safety net: never let content stay invisible if the observer is delayed
+    // or never fires. Long enough not to interfere with scroll-driven reveals
+    // during normal reading; only matters on an observer failure.
+    const fallback = window.setTimeout(() => setShown(true), 4000);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
+  const variantClass =
+    variant === 'blur' ? 'gh-reveal--blur' : variant === 'scale' ? 'gh-reveal--scale' : '';
+  const Tag = as as React.ElementType;
+
   return (
-    <div
+    <Tag
       ref={ref}
-      className={className}
-      style={{
-        opacity: shown ? 1 : 0,
-        transform: shown ? 'none' : 'translateY(22px)',
-        transition: `opacity 700ms cubic-bezier(.16,1,.3,1) ${delay}ms, transform 700ms cubic-bezier(.16,1,.3,1) ${delay}ms`,
-      }}
+      className={`gh-reveal ${variantClass} ${shown ? 'is-visible' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
-    </div>
+    </Tag>
   );
 };
 
@@ -103,19 +112,10 @@ export const Eyebrow: React.FC<{ children: React.ReactNode; tone?: 'green' | 'li
   children,
   tone = 'green',
 }) => (
-  <div
-    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
-      tone === 'green'
-        ? 'border-[#CFE6D5] bg-[#EAF5EC] text-[#1B5E36]'
-        : 'border-white/25 bg-white/10 text-[#D7F0DD]'
-    }`}
-  >
-    <span className="relative flex h-1.5 w-1.5">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#3E984A] opacity-70" />
-      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#3E984A]" />
-    </span>
+  <span className={`gh-eyebrow ${tone === 'light' ? 'gh-eyebrow--light' : ''}`}>
+    <span className="gh-dot" aria-hidden="true" />
     {children}
-  </div>
+  </span>
 );
 
 export const SectionHeading: React.FC<{
@@ -135,17 +135,17 @@ export const SectionHeading: React.FC<{
       </div>
     )}
     <h2
-      className={`text-[28px] leading-[1.12] font-semibold tracking-[-0.02em] sm:text-[36px] md:text-[42px] ${
-        tone === 'dark' ? 'text-[#172535]' : 'text-white'
+      className={`gh-display text-[30px] leading-[1.08] font-semibold sm:text-[38px] md:text-[46px] ${
+        tone === 'dark' ? 'text-[#16241E]' : 'text-white'
       }`}
     >
       {title}
     </h2>
     {description && (
       <p
-        className={`mt-4 max-w-2xl text-[15px] leading-[1.7] ${
+        className={`mt-4 max-w-2xl text-[15.5px] leading-[1.75] ${
           align === 'center' ? 'mx-auto' : ''
-        } ${tone === 'dark' ? 'text-[#64748B]' : 'text-[#BFDCC7]'}`}
+        } ${tone === 'dark' ? 'text-[#5B6B62]' : 'text-[#BFDCC7]'}`}
       >
         {description}
       </p>
@@ -159,10 +159,7 @@ export const PrimaryButton: React.FC<{
   arrow?: boolean;
   className?: string;
 }> = ({ onClick, children, arrow = true, className = '' }) => (
-  <button
-    onClick={onClick}
-    className={`group inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B5E36] px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#103D2B] hover:-translate-y-0.5 active:translate-y-0 ${className}`}
-  >
+  <button onClick={onClick} className={`gh-btn gh-btn-primary px-5 py-3 text-sm ${className}`}>
     <span>{children}</span>
     {arrow && (
       <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -178,11 +175,7 @@ export const SecondaryButton: React.FC<{
 }> = ({ onClick, children, className = '', light = false }) => (
   <button
     onClick={onClick}
-    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 ${
-      light
-        ? 'border-white/30 bg-white/5 text-white hover:bg-white/10'
-        : 'border-[#E2E8EB] bg-white text-[#172535] hover:border-[#C6D3D9] hover:bg-[#F6F8F9]'
-    } ${className}`}
+    className={`gh-btn ${light ? 'gh-btn-ghost' : 'gh-btn-secondary'} px-5 py-3 text-sm ${className}`}
   >
     {children}
   </button>
@@ -193,27 +186,22 @@ export const Card: React.FC<{
   className?: string;
   hover?: boolean;
 }> = ({ children, className = '', hover = false }) => (
-  <div
-    className={`rounded-2xl border border-[#E2E8EB] bg-white ${
-      hover
-        ? 'transition-all duration-300 hover:-translate-y-1 hover:border-[#BFD9C6] hover:shadow-[0_18px_40px_-24px_rgba(16,61,43,0.35)]'
-        : ''
-    } ${className}`}
-  >
+  <div className={`${hover ? 'gh-card' : 'rounded-2xl border border-[#E4E9E4] bg-white'} ${className}`}>
     {children}
   </div>
 );
 
-export const Chip: React.FC<{ children: React.ReactNode; tone?: 'green' | 'amber' | 'red' | 'blue' | 'slate' }> = ({
-  children,
-  tone = 'green',
-}) => {
+export const Chip: React.FC<{
+  children: React.ReactNode;
+  tone?: 'green' | 'amber' | 'red' | 'blue' | 'slate' | 'clay';
+}> = ({ children, tone = 'green' }) => {
   const map = {
     green: 'bg-[#EAF5EC] text-[#1B5E36] border-[#CFE6D5]',
     amber: 'bg-[#FDF4E3] text-[#8A5D0A] border-[#F2DFB8]',
     red: 'bg-[#FCECEE] text-[#A31F2C] border-[#F3C7CD]',
-    blue: 'bg-[#ECF2FC] text-[#25508F] border-[#C9DBF5]',
-    slate: 'bg-[#F1F4F6] text-[#475569] border-[#E2E8EB]',
+    blue: 'bg-[#E6F1EA] text-[#1F6B43] border-[#C9E2D2]',
+    slate: 'bg-[#F3EFE9] text-[#5C6B62] border-[#E4DECF]',
+    clay: 'bg-[#F6E7DD] text-[#9A4F2C] border-[#EBD3C2]',
   } as const;
   return (
     <span

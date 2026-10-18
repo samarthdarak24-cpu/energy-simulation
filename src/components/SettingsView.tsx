@@ -71,9 +71,53 @@ export const SettingsView: React.FC = () => {
     { id: 'ev', name: 'EV Heavy Scenario', desc: 'High EV charging load', icon: Car },
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSavedAlert(true);
+    try {
+      await fetch('http://localhost:8000/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          solarInstalledCapacityKw: solarCapacity,
+          solarEfficiency: efficiencyFactor / 100,
+          batteryCapacityKwh: batteryCapacity,
+          batteryInitialSoc: 76.0,
+          batteryMinSoc: 20.0,
+          batteryMaxSoc: 95.0,
+          batteryMaxChargeKw: maxChargePower,
+          batteryMaxDischargeKw: maxDischargePower,
+          residentialBaseKw: baseDemand,
+          commercialBaseKw: nonCriticalLoad,
+          criticalBaseKw: criticalLoad,
+          flexibleBaseKw: 10.0,
+          evNumChargers: 6,
+          evMaxChargingKw: 40.0,
+          gridConnected: true,
+          gridImportLimitKw: 100.0,
+          gridExportLimitKw: 80.0,
+        }),
+      });
+    } catch (e) {
+      // Fallback
+    }
     setTimeout(() => setSavedAlert(false), 2500);
+  };
+
+  const handleSelectPreset = async (presetId: string, presetName: string) => {
+    setActivePreset(presetName);
+    const presetKeyMap: Record<string, string> = {
+      normal: 'normal',
+      solar: 'high_solar',
+      peak: 'peak_demand',
+      islanded: 'grid_islanding',
+      ev: 'high_ev',
+    };
+    const key = presetKeyMap[presetId] || 'normal';
+    try {
+      await fetch(`http://localhost:8000/api/config/presets/${key}`, { method: 'POST' });
+    } catch (e) {
+      // Fallback
+    }
   };
 
   return (
@@ -916,7 +960,7 @@ export const SettingsView: React.FC = () => {
                 return (
                   <button
                     key={pr.id}
-                    onClick={() => setActivePreset(pr.name)}
+                    onClick={() => handleSelectPreset(pr.id, pr.name)}
                     className={`flex items-start gap-2.5 w-full p-2.5 rounded-xl border text-left transition-all ${
                       isCurrent
                         ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500'

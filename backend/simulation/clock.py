@@ -17,8 +17,7 @@ class SimulationClock:
         self.is_running = True
 
     def tick(self) -> int:
-        if self.is_running:
-            self.current_step += 1
+        self.current_step += 1
         return self.current_step
 
     @property

@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Enhance backend/simulation/network.py NetworkValidator with validate_network_state() method and add 4 new Pydantic schemas to backend/models/schemas.py. The new method computes per-bus voltages (central_hub, solar_bus, bess_bus, grid_bus, 4 load buses), system frequency, convergence status, branch flows for all 8 connections, and constraint violations list. New schemas NetworkStateSchema, BusVoltageSchema, BranchFlowSchema, AssetStatusUpdateRequest, AssetListResponse provide structured types. This feature depends on FEAT-001 for asset_service imports but can proceed in parallel since validate_network_state is called by get_network_health.",
+  "status": "pending",
+  "steps": [
+    "Open backend/simulation/network.py and add validate_network_state(solar_generation_kw, battery_power_kw, grid_power_kw, total_demand_served_kw, tolerance_kw=1.0) method to NetworkValidator class",
+    "In validate_network_state: call existing validate_power_balance() to get is_balanced, mismatch_kw, frequency_hz, voltage_pu base values",
+    "Compute 8 bus voltages in per-unit: central_hub 1.0 pu baseline, solar_bus = 1.0 + 0.001 * (solar_generation_kw / 160), bess_bus = 1.0 - 0.002 * abs(battery_power_kw) / 60, grid_bus = 1.0 (fixed), hospital_bus = central_hub - 0.01, residential_bus = central_hub - 0.015, commercial_bus = central_hub - 0.012, ev_bus = central_hub - 0.018, flexible_bus = central_hub - 0.008. Clamp all to [0.90, 1.10]",
+    "Compute 6 branch flows as BranchFlowSchema: conn_solar_hub (solar_generation_kw), conn_batt_hub (abs battery_power_kw), conn_grid_hub (abs grid_power_kw), conn_hub_hospital (critical from telemetry or 40 kW estimate), conn_hub_residential (total_demand * 0.35), conn_hub_ev (ev from telemetry or 32 kW estimate). Set capacity_kw 200/150/150/80/100/80, loading_pct = (flow/capacity)*100, status 'active'",
+    "Identify constraint violations: voltage<0.95 or >1.05 adds BusVoltageViolation, frequency<49.8 or >50.2 adds FrequencyDeviation, loading_pct>100 adds BranchOverload. Return violations list of dicts {type, asset, value, limit}",
+    "Return dict: {buses: [BusVoltageSchema objects], branches: [BranchFlowSchema objects], frequency_hz, converged: is_balanced, mismatch_kw, constraint_violations: violations list}",
+    "Open backend/models/schemas.py and add BusVoltageSchema(bus_id: str, voltage_pu: float, voltage_kv: float = voltage_pu * 11.0, within_limits: bool = 0.95 <= voltage_pu <= 1.05)",
+    "Add BranchFlowSchema(branch_id: str, source: str, target: str, flow_kw: float, capacity_kw: float, loading_pct: float, status: Literal['active', 'tripped'])",
+    "Add NetworkStateSchema(buses: List[BusVoltageSchema], branches: List[BranchFlowSchema], frequency_hz: float, converged: bool, mismatch_kw: float, constraint_violations: List[Dict[str, Any]])",
+    "Add AssetStatusUpdateRequest(status: Literal['Online', 'Connected', 'Degraded', 'Offline', 'Faulted'])",
+    "Add AssetListResponse(assets: List[AssetSchema], timestamp: str)"
+  ],
+  "acceptance_criteria": [
+    "NetworkValidator.validate_network_state() exists and returns dict matching NetworkStateSchema structure",
+    "validate_network_state() computes 8 bus voltages and 6 branch flows",
+    "constraint_violations list is populated when voltage or frequency is out of bounds",
+    "All 4 new Pydantic schemas are defined in backend/models/schemas.py and can be imported",
+    "Existing validate_power_balance() remains unchanged and backwards compatible"
+  ],
+  "verification": [
+    "Run pytest backend/tests/test_twin.py::test_network_state -v",
+    "Manually test: python -c 'from backend.simulation.network import NetworkValidator; v=NetworkValidator(); r=v.validate_network_state(100, 20, 10, 80); print(len(r[\"buses\"]), len(r[\"branches\"]))' should print 8 6"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

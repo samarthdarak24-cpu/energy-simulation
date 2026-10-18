@@ -1,0 +1,46 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Complete backend/routers/twin_router.py with 4 missing endpoints (GET /assets, GET /asset/{id}, GET /connections, PUT /asset/{id}/status), add GET /network-state to replace /network-validation, enhance orchestrator._broadcast to include assetStates in WebSocket telemetry, hook sync_assets_to_db into orchestrator.step_forward, and create comprehensive backend/tests/test_twin.py with 10 test cases. This feature integrates FEAT-001 and FEAT-002 into the API layer and validates the entire Digital Twin backend.",
+  "status": "pending",
+  "steps": [
+    "Open backend/routers/twin_router.py and import asset_service functions: from backend.services.asset_service import get_topology, get_all_assets, get_asset_details, calculate_connection_flows, get_network_health, update_asset_status",
+    "Import get_db from backend.database and Depends from fastapi, import AssetListResponse, AssetStatusUpdateRequest, NetworkStateSchema from backend.models.schemas",
+    "Refactor existing GET /topology endpoint to call asset_service.get_topology() instead of inline logic, wrap result in DigitalTwinTopologyResponse",
+    "Add GET /assets endpoint with response_model=AssetListResponse: call asset_service.get_all_assets(), return AssetListResponse(assets=result, timestamp=orchestrator.clock.current_time_str)",
+    "Add GET /asset/{asset_id} endpoint with response_model=AssetSchema: call asset_service.get_asset_details(asset_id), return result (404 raised by service)",
+    "Add GET /connections endpoint with response_model=List[AssetConnectionSchema]: call asset_service.calculate_connection_flows(), return list",
+    "Add GET /network-state endpoint with response_model=NetworkStateSchema: call asset_service.get_network_health(), wrap dict in NetworkStateSchema(**result) and return",
+    "Keep GET /network-validation endpoint unchanged for backwards compatibility",
+    "Add PUT /asset/{asset_id}/status endpoint with body: AssetStatusUpdateRequest, db: Session = Depends(get_db): call asset_service.update_asset_status(asset_id, body.status, db), return result",
+    "Open backend/simulation/orchestrator.py, find _broadcast method (line ~180), add assetStates key to data dict before calling q.put_nowait: extract 8 assets from latest_telemetry and package as list of dicts {id, status, powerKw, isHealthy}",
+    "In orchestrator.py step_forward() method, after self._save_measurement_to_db(telemetry) and before self._broadcast(telemetry), add: db = SessionLocal(); asset_service.sync_assets_to_db(db); db.close() with try/except to ignore errors",
+    "Import asset_service in orchestrator.py: from backend.services import asset_service",
+    "Create backend/tests/test_twin.py with 10 test functions using client fixture from conftest.py",
+    "test_topology_returns_all_assets: GET /api/twin/topology, assert len(data['assets']) == 8, assert 'solar_pv' in [a['id'] for a in data['assets']]",
+    "test_topology_connections_match: GET /api/twin/topology, assert len(data['connections']) >= 6, assert all isinstance(c['flowKw'], (int, float)) for c in data['connections']",
+    "test_assets_endpoint: GET /api/twin/assets, assert res.status_code == 200, assert len(res.json()['assets']) == 8, assert 'timestamp' in res.json()",
+    "test_asset_detail_valid: GET /api/twin/asset/solar_pv, assert status 200, assert data['id'] == 'solar_pv', assert 'powerKw' in data",
+    "test_asset_detail_not_found: GET /api/twin/asset/nonexistent, assert status 404",
+    "test_connections_endpoint: GET /api/twin/connections, assert status 200, assert isinstance(res.json(), list), assert len(res.json()) >= 6",
+    "test_network_state_endpoint: GET /api/twin/network-state, assert status 200, data = res.json(), assert 'buses' in data, assert 'branches' in data, assert 'converged' in data, assert len(data['buses']) == 8, assert len(data['branches']) == 6",
+    "test_asset_status_update: POST /api/twin/asset/bess_1/status with {status: 'Offline'}, assert status 200, verify orchestrator.battery.is_tripped == True",
+    "test_grid_outage_marks_asset_offline: POST /api/faults/inject with grid_outage scenario, orchestrator.step_forward(), GET /api/twin/asset/grid_sub, assert status != 'Connected'",
+    "test_connection_flows_sum: GET /api/twin/connections and /api/simulation/telemetry, sum all load-side flowKw from connections, compare to totalSupply from telemetry, assert abs(difference) < 10.0 kW tolerance"
+  ],
+  "acceptance_criteria": [
+    "All 4 new endpoints (GET /assets, GET /asset/{id}, GET /connections, PUT /asset/{id}/status) return 200 for valid requests",
+    "GET /network-state returns NetworkStateSchema with 8 buses and 6 branches",
+    "PUT /asset/{id}/status updates DB and applies orchestrator side-effects",
+    "orchestrator._broadcast includes assetStates in WebSocket data",
+    "orchestrator.step_forward() calls asset_service.sync_assets_to_db() to keep DB in sync",
+    "All 10 tests in backend/tests/test_twin.py pass"
+  ],
+  "verification": [
+    "Run pytest backend/tests/test_twin.py -v and confirm all 10 tests pass",
+    "Run pytest backend/tests/test_api_endpoints.py::test_digital_twin_endpoints -v to ensure existing tests still pass",
+    "Run full test suite: pytest backend/tests/ -v and verify no regressions"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

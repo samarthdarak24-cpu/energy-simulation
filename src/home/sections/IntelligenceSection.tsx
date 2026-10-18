@@ -403,7 +403,7 @@ const renderAssetBody = (
           />
           <g
             fill="none"
-            stroke={lit ? C.forest : '#94A3B8'}
+            stroke={lit ? C.forest : '#8AA395'}
             strokeWidth={1.4}
             strokeLinecap="round"
           >

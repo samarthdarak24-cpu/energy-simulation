@@ -29,6 +29,12 @@ class MicrogridTelemetrySchema(BaseModel):
     simulatedTime: str = Field("12:00 PM", description="Simulated timestamp")
     timestep: int = Field(0, description="Current simulation timestep")
     simulationStatus: Literal["running", "paused", "stopped"] = "running"
+    feederLoadingPct: Optional[float] = 0.0
+    transformerLoadingPct: Optional[float] = 0.0
+    networkLossesKw: Optional[float] = 0.0
+    powerFlowConverged: Optional[bool] = True
+    connectivity: Optional[str] = "grid_connected"
+    busVoltages: Optional[Dict[str, float]] = None
 
 
 class SimulationControlRequest(BaseModel):
@@ -66,6 +72,12 @@ class DigitalTwinTopologyResponse(BaseModel):
     powerBalanceKw: float
     frequencyHz: float = 50.0
     voltagePUnit: float = 1.0
+    feederLoadingPct: Optional[float] = 0.0
+    transformerLoadingPct: Optional[float] = 0.0
+    networkLossesKw: Optional[float] = 0.0
+    powerFlowConverged: Optional[bool] = True
+    connectivity: Optional[str] = "grid_connected"
+    busVoltages: Optional[Dict[str, float]] = None
 
 
 # --- Alerts & Events ---

@@ -32,7 +32,7 @@ export interface RecoveryStep {
   id: PipelineStage;
   title: string;
   subtitle: string;
-  status: 'completed' | 'active' | 'pending';
+  status: 'completed' | 'active' | 'pending' | 'failed';
   note?: string;
 }
 

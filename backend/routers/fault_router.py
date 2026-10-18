@@ -37,3 +37,9 @@ def inject_fault(req: InjectFaultRequest):
 def clear_faults():
     fault_engine.clear_all_faults()
     return {"status": "success", "message": "All faults cleared. Microgrid restored to baseline."}
+
+
+@router.get("/diagnose")
+def diagnose_telemetry():
+    """Runs current microgrid telemetry through the ML fault classifier trained on synthetic dataset."""
+    return fault_engine.diagnose_live_state()

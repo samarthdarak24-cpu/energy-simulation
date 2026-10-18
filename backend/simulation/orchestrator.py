@@ -194,6 +194,12 @@ class SimulationOrchestrator:
             "simulationStatus": "running" if self.clock.is_running else "paused",
             "voltagePu": val["voltage_pu"],
             "frequencyHz": val["frequency_hz"],
+            "feederLoadingPct": val["feeder_loading_pct"],
+            "transformerLoadingPct": val["transformer_loading_pct"],
+            "networkLossesKw": val["network_losses_kw"],
+            "powerFlowConverged": val["power_flow_converged"],
+            "connectivity": val["connectivity"],
+            "busVoltages": val["bus_voltages"],
         }
 
         self.latest_telemetry = telemetry
@@ -220,6 +226,17 @@ class SimulationOrchestrator:
 
         unmet_fraction = min(1.0, shortfall_kw / total_requested)
         return round(min(120.0, max(dt_hours * 60.0, unmet_fraction * 60.0)), 1)
+
+    def _compute_recovery_time(self, total_requested: float, total_supply: float, dt_hours: float) -> float:
+        """Calculate estimated recovery time in minutes based on deficit and available reserves."""
+        deficit_kw = max(0.0, total_requested - total_supply)
+        available_reserve_kw = self.battery.max_feasible_discharge_kw(dt_hours) + (
+            self.grid.available_import_kw if self.grid.is_connected and not self.grid.is_faulted else 0.0
+        )
+        if deficit_kw <= 0 or available_reserve_kw <= 0:
+            return 0.0
+        else:
+            return round(min(60.0, (deficit_kw / max(1.0, available_reserve_kw)) * 30.0), 1)
 
     def _save_measurement_to_db(self, t: Dict[str, Any]):
         db = SessionLocal()

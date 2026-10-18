@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, LogOut } from 'lucide-react';
 import { useGo, C } from './ui';
+import { useMicrogrid } from '../context/MicrogridContext';
 
 const NAV_LINKS = [
   { label: 'Platform', href: '#platform' },
@@ -36,6 +37,7 @@ export const GridHealLogo: React.FC<{ size?: number; tone?: 'dark' | 'light' }> 
 
 export const Navbar: React.FC = () => {
   const go = useGo();
+  const { currentUser, signOut } = useMicrogrid();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -53,11 +55,17 @@ export const Navbar: React.FC = () => {
     };
   }, [open]);
 
+  const signedIn = Boolean(currentUser);
+  const handleSignOut = () => {
+    setOpen(false);
+    signOut();
+  };
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'border-b border-[#E2E8EB] bg-white/95 backdrop-blur-md shadow-[0_6px_24px_-18px_rgba(16,61,43,0.45)]'
+          ? 'border-b border-[#E4E9E4] bg-white/95 backdrop-blur-md shadow-[0_6px_24px_-18px_rgba(16,61,43,0.45)]'
           : 'border-b border-transparent bg-transparent'
       }`}
     >
@@ -81,7 +89,7 @@ export const Navbar: React.FC = () => {
             <a
               key={link.href}
               href={link.href}
-              className="text-[13px] font-medium text-[#4A5A68] transition-colors hover:text-[#1B5E36]"
+              className="text-[13px] font-medium text-[#4A5A52] transition-colors hover:text-[#1B5E36]"
             >
               {link.label}
             </a>
@@ -91,28 +99,38 @@ export const Navbar: React.FC = () => {
         <div className="hidden items-center gap-3 lg:flex">
           <button
             onClick={() => go('help')}
-            className="text-[13px] font-medium text-[#4A5A68] transition-colors hover:text-[#1B5E36]"
+            className="text-[13px] font-medium text-[#4A5A52] transition-colors hover:text-[#1B5E36]"
           >
             Documentation
           </button>
-          <button
-            onClick={() => go('overview')}
-            className="rounded-lg px-3 py-2 text-[13px] font-semibold text-[#172535] transition-colors hover:bg-[#F1F4F6]"
-          >
-            Sign In
-          </button>
+          {signedIn ? (
+            <button
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#9B2C2C] transition-colors hover:bg-[#FDF2F2]"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={() => go('login')}
+              className="rounded-lg px-3 py-2 text-[13px] font-semibold text-[#172535] transition-colors hover:bg-[#F3EFE9]"
+            >
+              Sign In
+            </button>
+          )}
           <button
             onClick={() => go('overview')}
             className="group inline-flex items-center gap-1.5 rounded-lg bg-[#1B5E36] px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:bg-[#103D2B] hover:-translate-y-0.5"
           >
-            Launch Recovery Lab
+            {signedIn ? 'Open Recovery Lab' : 'Launch Recovery Lab'}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
 
         <button
           onClick={() => setOpen(true)}
-          className="rounded-lg border border-[#E2E8EB] bg-white p-2 text-[#172535] lg:hidden"
+          className="rounded-lg border border-[#E4E9E4] bg-white p-2 text-[#172535] lg:hidden"
           aria-label="Open menu"
           aria-expanded={open}
         >
@@ -136,14 +154,14 @@ export const Navbar: React.FC = () => {
             open ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          <div className="flex h-16 items-center justify-between border-b border-[#E2E8EB] px-5">
+          <div className="flex h-16 items-center justify-between border-b border-[#E4E9E4] px-5">
             <div className="flex items-center gap-2">
               <GridHealLogo size={28} />
               <span className="text-[15px] font-bold text-[#172535]">GridHeal</span>
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-lg border border-[#E2E8EB] p-2 text-[#172535]"
+              className="rounded-lg border border-[#E4E9E4] p-2 text-[#172535]"
               aria-label="Close menu"
             >
               <X className="h-4 w-4" />
@@ -156,7 +174,7 @@ export const Navbar: React.FC = () => {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-3 text-sm font-medium text-[#33475B] hover:bg-[#F6F8F9]"
+                className="block rounded-lg px-3 py-3 text-sm font-medium text-[#324339] hover:bg-[#F7F5F0]"
               >
                 {link.label}
               </a>
@@ -166,21 +184,34 @@ export const Navbar: React.FC = () => {
                 setOpen(false);
                 go('help');
               }}
-              className="block w-full rounded-lg px-3 py-3 text-left text-sm font-medium text-[#33475B] hover:bg-[#F6F8F9]"
+              className="block w-full rounded-lg px-3 py-3 text-left text-sm font-medium text-[#324339] hover:bg-[#F7F5F0]"
             >
               Documentation
             </button>
           </nav>
 
-          <div className="space-y-2 border-t border-[#E2E8EB] p-4">
+          <div className="space-y-2 border-t border-[#E4E9E4] p-4">
+            {signedIn && (
+              <p className="px-1 pb-1 text-[11px] text-[#7A8794]">
+                Signed in as {currentUser?.email}
+              </p>
+            )}
             <button
               onClick={() => {
                 setOpen(false);
-                go('overview');
+                if (signedIn) {
+                  signOut();
+                } else {
+                  go('login');
+                }
               }}
-              className="w-full rounded-lg border border-[#E2E8EB] px-4 py-2.5 text-sm font-semibold text-[#172535]"
+              className={`w-full rounded-lg border px-4 py-2.5 text-sm font-semibold ${
+                signedIn
+                  ? 'border-[#F3C6C6] bg-[#FDF2F2] text-[#9B2C2C]'
+                  : 'border-[#E4E9E4] text-[#172535]'
+              }`}
             >
-              Sign In
+              {signedIn ? 'Sign Out' : 'Sign In'}
             </button>
             <button
               onClick={() => {
@@ -189,7 +220,7 @@ export const Navbar: React.FC = () => {
               }}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#1B5E36] px-4 py-2.5 text-sm font-semibold text-white"
             >
-              Launch Recovery Lab
+              {signedIn ? 'Open Recovery Lab' : 'Launch Recovery Lab'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

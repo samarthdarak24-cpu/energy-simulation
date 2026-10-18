@@ -43,7 +43,7 @@ const SolarVisual: React.FC = () => (
       </g>
     ))}
 
-    <rect x="190" y="78" width="112" height="58" rx="9" fill="#FFFFFF" opacity="0.96" stroke="#E2E8EB" />
+    <rect x="190" y="78" width="112" height="58" rx="9" fill="#FFFFFF" opacity="0.96" stroke="#E4E9E4" />
     <rect x="238" y="86" width="30" height="42" fill={C.red} opacity="0.09" />
     <line x1="198" y1="124" x2="294" y2="124" stroke="#EDF2EE" strokeWidth="1" />
     <polyline
@@ -127,10 +127,10 @@ const FaultVisual: React.FC = () => (
 
     <rect x="126" y="82" width="118" height="44" rx="5" fill="#FFFFFF" stroke="#BFD9C6" />
     <rect x="132" y="88" width="106" height="4" rx="2" fill={C.soft} />
-    <line x1="150" y1="98" x2="150" y2="120" stroke="#E2E8EB" strokeWidth="1.2" />
-    <line x1="174" y1="98" x2="174" y2="120" stroke="#E2E8EB" strokeWidth="1.2" />
-    <line x1="198" y1="98" x2="198" y2="120" stroke="#E2E8EB" strokeWidth="1.2" />
-    <line x1="222" y1="98" x2="222" y2="120" stroke="#E2E8EB" strokeWidth="1.2" />
+    <line x1="150" y1="98" x2="150" y2="120" stroke="#E4E9E4" strokeWidth="1.2" />
+    <line x1="174" y1="98" x2="174" y2="120" stroke="#E4E9E4" strokeWidth="1.2" />
+    <line x1="198" y1="98" x2="198" y2="120" stroke="#E4E9E4" strokeWidth="1.2" />
+    <line x1="222" y1="98" x2="222" y2="120" stroke="#E4E9E4" strokeWidth="1.2" />
     <circle cx="134" cy="116" r="2.4" fill={C.brand} />
 
     <rect x="176" y="24" width="116" height="26" rx="13" fill="#FFFFFF" stroke="#F3C7CD" />
@@ -153,7 +153,7 @@ const FaultVisual: React.FC = () => (
 );
 
 const Hint: React.FC<{ className?: string }> = ({ className = 'mt-4' }) => (
-  <span className={`inline-flex items-center gap-1.5 text-[12px] font-medium text-[#64748B] ${className}`}>
+  <span className={`inline-flex items-center gap-1.5 text-[12px] font-medium text-[#5B6B62] ${className}`}>
     Read the failure mode
     <ArrowRight className="h-3.5 w-3.5 text-[#3E984A]" />
   </span>
@@ -187,7 +187,7 @@ export const ProblemSection: React.FC = () => {
               <h3 className="mt-3 text-[17px] font-semibold text-[#172535]">
                 Unpredictable solar generation
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-[#64748B]">
+              <p className="mt-2 text-[13px] leading-relaxed text-[#5B6B62]">
                 Solar output can fall suddenly and create a supply-demand imbalance.
               </p>
               <div className="mt-auto pt-5">
@@ -211,13 +211,13 @@ export const ProblemSection: React.FC = () => {
               <h3 className="mt-3 text-[17px] font-semibold text-[#172535]">
                 Rising and flexible demand
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-[#64748B]">
+              <p className="mt-2 text-[13px] leading-relaxed text-[#5B6B62]">
                 Vehicle charging and shifting consumer demand can create temporary peaks.
               </p>
             </div>
             <div className="mt-5 flex items-center justify-between border-t border-[#EEF2F4] px-5 py-3">
               <Hint className="" />
-              <span className="text-[11px] font-medium text-[#94A3B8]">02</span>
+              <span className="text-[11px] font-medium text-[#8AA395]">02</span>
             </div>
           </Card>
         </Reveal>
@@ -232,12 +232,12 @@ export const ProblemSection: React.FC = () => {
             <div className="flex flex-1 flex-col p-5">
               <div className="flex items-center justify-between">
                 <Chip tone="red">Reliability</Chip>
-                <span className="text-[11px] font-medium text-[#94A3B8]">03</span>
+                <span className="text-[11px] font-medium text-[#8AA395]">03</span>
               </div>
               <h3 className="mt-3 text-[17px] font-semibold text-[#172535]">
                 Unexpected disruptions
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-[#64748B]">
+              <p className="mt-2 text-[13px] leading-relaxed text-[#5B6B62]">
                 Grid outages, unavailable batteries, and communication failures can threaten
                 critical services.
               </p>
@@ -250,7 +250,7 @@ export const ProblemSection: React.FC = () => {
       </div>
 
       <Reveal delay={260}>
-        <div className="mt-12 max-w-3xl border-t border-[#E2E8EB] pt-8 md:mt-14">
+        <div className="mt-12 max-w-3xl border-t border-[#E4E9E4] pt-8 md:mt-14">
           <p className="text-[16px] font-medium leading-relaxed text-[#172535]">
             Detecting the problem is only the beginning. The real challenge is choosing and
             verifying the right response.

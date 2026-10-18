@@ -14,6 +14,7 @@ from backend.routers import (
     event_router,
     config_router,
     support_router,
+    dataset_router,
 )
 
 
@@ -31,6 +32,8 @@ async def simulation_clock_loop():
         except asyncio.CancelledError:
             break
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             await asyncio.sleep(1.0)
 
 
@@ -75,6 +78,7 @@ app.include_router(benchmark_router.router)
 app.include_router(event_router.router)
 app.include_router(config_router.router)
 app.include_router(support_router.router)
+app.include_router(dataset_router.router)
 
 
 @app.get("/")

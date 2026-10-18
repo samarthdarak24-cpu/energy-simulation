@@ -158,7 +158,7 @@ export const TechStackSection: React.FC = () => {
                   markerUnits="userSpaceOnUse"
                   orient="auto"
                 >
-                  <path d="M0,0 L8,4 L0,8 Z" fill="#CBD5E1" />
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#C9D3CC" />
                 </marker>
                 <marker
                   id="tech-flow-state"
@@ -170,7 +170,7 @@ export const TechStackSection: React.FC = () => {
                   markerUnits="userSpaceOnUse"
                   orient="auto"
                 >
-                  <path d="M0,0 L8,4 L0,8 Z" fill="#94A3B8" />
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#8AA395" />
                 </marker>
               </defs>
 
@@ -185,7 +185,7 @@ export const TechStackSection: React.FC = () => {
                     y1={y1}
                     x2={FLOW_X}
                     y2={y2 - 1}
-                    stroke="#CBD5E1"
+                    stroke="#C9D3CC"
                     strokeWidth={1.4}
                     markerEnd="url(#tech-flow-down)"
                   />
@@ -197,7 +197,7 @@ export const TechStackSection: React.FC = () => {
                   BOX_X - 4
                 }`}
                 fill="none"
-                stroke="#94A3B8"
+                stroke="#8AA395"
                 strokeWidth={1.4}
                 strokeDasharray="5 4"
                 markerEnd="url(#tech-flow-state)"
@@ -210,7 +210,7 @@ export const TechStackSection: React.FC = () => {
                 fontSize={8}
                 fontFamily={MONO}
                 letterSpacing="0.12em"
-                fill="#94A3B8"
+                fill="#8AA395"
               >
                 state
               </text>
@@ -253,7 +253,7 @@ export const TechStackSection: React.FC = () => {
                       cx={BOX_X + BOX_W - 14}
                       cy={y + BOX_H / 2}
                       r={3}
-                      fill={isActive ? C.brand : '#CBD5E1'}
+                      fill={isActive ? C.brand : '#C9D3CC'}
                     />
                   </g>
                 );

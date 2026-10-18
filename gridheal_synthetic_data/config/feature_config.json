@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "feature_policy_description": "Strict feature separation to prevent data leakage across time horizons and ground truth simulator labels.",
+  "solar_forecasting": {
+    "horizons_minutes": [15, 30, 60],
+    "input_features": [
+      "solar_irradiance_w_m2",
+      "ambient_temperature_c",
+      "cell_temperature_c",
+      "solar_available_power_kw",
+      "solar_actual_power_kw",
+      "hour_of_day",
+      "minute_of_hour",
+      "day_of_week",
+      "solar_elevation_deg",
+      "solar_lag_15m",
+      "solar_lag_30m",
+      "irradiance_lag_15m"
+    ],
+    "target_variables": [
+      "solar_target_15m_kw",
+      "solar_target_30m_kw",
+      "solar_target_60m_kw"
+    ],
+    "excluded_leakage_features": [
+      "timestamp",
+      "scenario_id",
+      "episode_id",
+      "fault_active",
+      "fault_type",
+      "fault_severity",
+      "recovery_action",
+      "recovery_complete",
+      "unserved_energy_kwh",
+      "total_unserved_load_kw"
+    ]
+  },
+  "demand_forecasting": {
+    "horizons_minutes": [15, 30, 60],
+    "input_features": [
+      "total_load_demand_kw",
+      "critical_load_demand_kw",
+      "flexible_load_demand_kw",
+      "ev_charging_demand_kw",
+      "ambient_temperature_c",
+      "hour_of_day",
+      "minute_of_hour",
+      "day_of_week",
+      "is_weekend",
+      "demand_lag_15m",
+      "demand_lag_30m",
+      "demand_lag_60m"
+    ],
+    "target_variables": [
+      "demand_target_15m_kw",
+      "demand_target_30m_kw",
+      "demand_target_60m_kw"
+    ],
+    "excluded_leakage_features": [
+      "timestamp",
+      "scenario_id",
+      "episode_id",
+      "critical_load_served_kw",
+      "flexible_load_served_kw",
+      "unserved_critical_load_kw",
+      "fault_active",
+      "fault_type",
+      "recovery_action",
+      "recovery_complete"
+    ]
+  },
+  "fault_detection": {
+    "task_type": "multiclass_classification",
+    "input_features": [
+      "solar_irradiance_w_m2",
+      "ambient_temperature_c",
+      "solar_actual_power_kw",
+      "total_load_demand_kw",
+      "battery_soc_pct",
+      "battery_charge_power_kw",
+      "battery_discharge_power_kw",
+      "grid_import_power_kw",
+      "grid_export_power_kw",
+      "bus_voltage_v",
+      "grid_frequency_hz",
+      "power_balance_error_kw",
+      "sensor_solar_power_kw",
+      "sensor_total_demand_kw",
+      "sensor_battery_soc_pct",
+      "sensor_residual_solar_kw",
+      "sensor_residual_demand_kw"
+    ],
+    "target_variables": [
+      "fault_active",
+      "fault_type"
+    ],
+    "excluded_leakage_features": [
+      "scenario_id",
+      "episode_id",
+      "episode_seed",
+      "fault_severity",
+      "affected_component",
+      "fault_start_timestamp",
+      "fault_end_timestamp",
+      "detection_label",
+      "fault_event_id",
+      "recovery_required",
+      "recovery_action",
+      "recovery_action_reason",
+      "recovery_action_feasible",
+      "recovery_complete",
+      "recovery_time_sec"
+    ]
+  },
+  "recovery_evaluation": {
+    "metrics": [
+      "episode_id",
+      "scenario_id",
+      "controller_type",
+      "critical_load_service_pct",
+      "total_unserved_energy_kwh",
+      "critical_unserved_energy_kwh",
+      "renewable_energy_utilization_pct",
+      "recovery_time_sec",
+      "peak_grid_import_kw",
+      "estimated_energy_cost_usd",
+      "estimated_emissions_kgco2e",
+      "constraint_violation_count",
+      "battery_throughput_kwh",
+      "recovery_feasible",
+      "recovery_successful"
+    ]
+  }
+}

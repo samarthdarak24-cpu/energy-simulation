@@ -1,5 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  BatteryCharging,
+  Check,
+  Cpu,
+  Layers,
+  Radio,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Zap,
+} from 'lucide-react';
 import {
   C,
   Chip,
@@ -10,47 +22,23 @@ import {
   useGo,
   useReducedMotion,
 } from '../ui';
+import heroIllustration from '../../assets/illustrations/hero-microgrid.webp';
 
-const STATUS_ROWS = [
-  { label: 'Solar', value: '128 kW' },
-  { label: 'Demand', value: '105 kW' },
-  { label: 'Battery', value: '76%' },
+const HERO_PHOTO =
+  'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1280&q=75';
+
+const TELEMETRY_STATS = [
+  { label: 'Solar Generation', value: '128.4 kW', delta: '+4.2% vs avg', tone: 'green', icon: Sun },
+  { label: 'Total Demand', value: '105.0 kW', delta: 'Nominal peak', tone: 'slate', icon: Zap },
+  { label: 'Battery Storage', value: '76.2% SoC', delta: '280 kWh ready', tone: 'green', icon: BatteryCharging },
+  { label: 'Power Balance', value: '0.000 kW', delta: 'Kirchhoff verified', tone: 'green', icon: Activity },
 ] as const;
 
-const PANEL_ROWS = [
-  { y: 334, scale: 0.52, xs: [300, 356, 412, 468], fill: C.brand, stroke: '#2F7A3B' },
-  { y: 368, scale: 0.68, xs: [280, 360, 440], fill: C.brand, stroke: '#2F7A3B' },
-  { y: 404, scale: 0.86, xs: [252, 356, 460], fill: C.forest, stroke: C.brand },
-] as const;
-
-const SolarPanel: React.FC<{
-  x: number;
-  y: number;
-  scale: number;
-  fill: string;
-  stroke: string;
-}> = ({ x, y, scale, fill, stroke }) => (
-  <g transform={`translate(${x} ${y}) scale(${scale})`}>
-    <polygon
-      points="0,12 92,0 104,20 12,32"
-      fill={fill}
-      stroke={stroke}
-      strokeWidth="1"
-      strokeLinejoin="round"
-    />
-    <line x1="23" y1="9" x2="35" y2="29" stroke={stroke} strokeWidth="0.7" opacity="0.5" />
-    <line x1="46" y1="6" x2="58" y2="26" stroke={stroke} strokeWidth="0.7" opacity="0.5" />
-    <line x1="69" y1="3" x2="81" y2="23" stroke={stroke} strokeWidth="0.7" opacity="0.5" />
-    <line x1="6" y1="22" x2="98" y2="10" stroke={stroke} strokeWidth="0.7" opacity="0.45" />
-    <line x1="14" y1="32" x2="14" y2="41" stroke="#B9CFC0" strokeWidth="1.6" strokeLinecap="round" />
-    <line x1="86" y1="24" x2="86" y2="33" stroke="#B9CFC0" strokeWidth="1.6" strokeLinecap="round" />
-  </g>
-);
-
-const CAPABILITIES: { label: string; icon: 'check' | 'shield' }[] = [
-  { label: 'Software-defined microgrid', icon: 'check' },
-  { label: 'Predictive energy management', icon: 'shield' },
-  { label: 'Verified recovery', icon: 'check' },
+const KEY_BENCHMARKS = [
+  { label: 'Critical Service Uptime', value: '99.8%', note: 'Zero hospital feeder drops' },
+  { label: 'Unserved Energy Reduction', value: '-55.6%', note: 'vs. baseline heuristic' },
+  { label: 'Optimization Latency', value: '1.14 ms', note: 'HiGHS MILP solver' },
+  { label: 'Physics Constraint Pass', value: '100%', note: 'Voltage & thermal limits' },
 ];
 
 export const HeroSection: React.FC = () => {
@@ -59,13 +47,14 @@ export const HeroSection: React.FC = () => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [activeTab, setActiveTab] = useState<'topology' | 'telemetry'>('topology');
 
   useEffect(() => {
     if (reduced) {
       setMounted(true);
       return;
     }
-    const timer = window.setTimeout(() => setMounted(true), 80);
+    const timer = window.setTimeout(() => setMounted(true), 60);
     return () => window.clearTimeout(timer);
   }, [reduced]);
 
@@ -74,7 +63,7 @@ export const HeroSection: React.FC = () => {
     transform: mounted ? 'none' : 'translateY(16px)',
     transition: reduced
       ? 'none'
-      : `opacity 620ms cubic-bezier(.16,1,.3,1) ${index * 80}ms, transform 620ms cubic-bezier(.16,1,.3,1) ${
+      : `opacity 650ms cubic-bezier(.16,1,.3,1) ${index * 80}ms, transform 650ms cubic-bezier(.16,1,.3,1) ${
           index * 80
         }ms`,
   });
@@ -98,276 +87,311 @@ export const HeroSection: React.FC = () => {
     target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   };
 
-  const sceneStyle: React.CSSProperties = {
-    transform: reduced
-      ? 'none'
-      : `translate3d(${parallax.x * 12}px, ${parallax.y * 12}px, 0) scale(1.04)`,
-    transition: reduced ? 'none' : 'transform 260ms cubic-bezier(.22,1,.36,1)',
-    willChange: reduced ? 'auto' : 'transform',
-  };
-
-  const cardStyle: React.CSSProperties = {
-    transform: reduced ? 'none' : `translate3d(${parallax.x * 6}px, ${parallax.y * 6}px, 0)`,
-    transition: reduced ? 'none' : 'transform 320ms cubic-bezier(.22,1,.36,1)',
-  };
-
   return (
-    <Section tone="white" className="overflow-hidden" innerClassName="pt-28 pb-14 md:pt-32 md:pb-20">
-      <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
-        {/* Copy */}
-        <div className="max-w-[620px]">
-          <div style={fade(0)}>
-            <Eyebrow>Renewable energy intelligence platform</Eyebrow>
+    <Section
+      tone="white"
+      className="relative overflow-hidden"
+      innerClassName="relative pt-24 pb-16 md:pt-28 md:pb-24"
+    >
+      {/* Ambient background glows */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(55% 45% at 15% 5%, rgba(234,245,236,0.95), transparent 60%), radial-gradient(45% 40% at 85% 15%, rgba(241,248,242,0.85), transparent 55%), radial-gradient(40% 35% at 50% 85%, rgba(234,245,236,0.6), transparent 60%)',
+        }}
+      />
+
+      {/* Live System Operational Header Pill */}
+      <div style={fade(0)} className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#CFE6D5] bg-[#EAF5EC] px-3.5 py-1.5 text-xs font-semibold text-[#1B5E36] shadow-sm">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#3E984A] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1B5E36]" />
+          </span>
+          <span>GRIDHEAL RECOVERY LAB v2.4</span>
+          <span className="text-[#9FC6A8]">·</span>
+          <span className="font-medium text-[#2E7D47]">DIGITAL TWIN LIVE</span>
+          <span className="text-[#9FC6A8]">·</span>
+          <span className="font-mono text-[11px] text-[#1B5E36]">0.000 kW RESIDUAL</span>
+        </div>
+
+        <div className="hidden items-center gap-2 rounded-full border border-[#E4E9E4] bg-white px-3 py-1 text-xs text-[#5B6B62] sm:inline-flex">
+          <Cpu className="h-3.5 w-3.5 text-[#3E984A]" />
+          <span>HiGHS LP Solver: Nominal</span>
+        </div>
+      </div>
+
+      <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
+        {/* Left Column: Core Value Proposition & Actions */}
+        <div className="lg:col-span-7">
+          <div style={fade(1)}>
+            <Eyebrow>A Predictive, Self-Healing Software-Defined Microgrid</Eyebrow>
           </div>
 
           <h1
-            style={fade(1)}
-            className="mt-5 text-[38px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#172535] sm:text-[48px] lg:text-[58px]"
+            style={fade(2)}
+            className="gh-display mt-4 text-[38px] leading-[1.05] font-semibold tracking-[-0.03em] text-[#16241E] sm:text-[50px] lg:text-[58px]"
           >
-            When the grid faces disruption,{' '}
-            <span className="text-[#1B5E36]">intelligence</span> takes over.
+            When disruptions strike the grid,{' '}
+            <span className="relative inline-block text-[#1B5E36]">
+              autonomous recovery
+              <span
+                aria-hidden="true"
+                className="absolute -bottom-1 left-0 h-[6px] w-full rounded-full"
+                style={{ background: 'linear-gradient(90deg,#9FE1CB,#3E984A)' }}
+              />
+            </span>{' '}
+            takes command.
           </h1>
 
           <p
-            style={fade(2)}
-            className="mt-5 max-w-[540px] text-[15px] leading-[1.7] text-[#64748B]"
+            style={fade(3)}
+            className="mt-5 max-w-[620px] text-[16px] leading-[1.7] text-[#5B6B62]"
           >
-            GridHeal is a predictive, self-healing microgrid digital twin that simulates renewable
-            energy systems, anticipates disruptions, automatically coordinates available resources,
-            and verifies recovery.
+            GridHeal is an end-to-end physics-constrained digital twin. It continuously simulates
+            solar PV arrays, battery storage, EV clusters, and critical hospital loads—anticipating
+            shortages, executing optimal mathematical dispatch, and verifying Kirchhoff energy
+            balances.
           </p>
 
-          <div style={fade(3)} className="mt-7 flex flex-wrap items-center gap-3">
-            <PrimaryButton onClick={() => go('overview')}>Launch Recovery Lab</PrimaryButton>
-            <SecondaryButton onClick={scrollToHowItWorks}>Explore How It Works</SecondaryButton>
+          {/* Interactive Pipeline Steps Badges */}
+          <div style={fade(3)} className="mt-5 flex flex-wrap items-center gap-2">
+            {[
+              { num: '01', label: 'DETECT' },
+              { num: '02', label: 'PREDICT' },
+              { num: '03', label: 'REALLOCATE' },
+              { num: '04', label: 'RECOVER' },
+              { num: '05', label: 'VERIFY' },
+            ].map((step, idx) => (
+              <span
+                key={step.label}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E9E4] bg-white px-2.5 py-1 text-xs font-semibold text-[#16241E] shadow-sm"
+              >
+                <span className="font-mono text-[10px] text-[#3E984A]">{step.num}</span>
+                <span>{step.label}</span>
+                {idx < 4 && <ArrowRight className="h-3 w-3 text-[#9FC6A8]" />}
+              </span>
+            ))}
           </div>
 
+          {/* Action CTAs */}
+          <div style={fade(4)} className="mt-8 flex flex-wrap items-center gap-3.5">
+            <PrimaryButton onClick={() => go('overview')}>
+              Launch Recovery Lab
+            </PrimaryButton>
+            <SecondaryButton onClick={() => go('faults')}>
+              Simulate Disruption
+            </SecondaryButton>
+            <button
+              onClick={() => go('twin')}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1B5E36] hover:text-[#0F4224] transition-colors px-2 py-2"
+            >
+              <span>Explore 9-Node Digital Twin</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Verification & Safety Footnote */}
           <div
-            style={fade(4)}
-            className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-[#64748B]"
+            style={fade(5)}
+            className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#5B6B62]"
           >
-            {CAPABILITIES.map((item, index) => (
-              <React.Fragment key={item.label}>
-                {index > 0 && (
-                  <span aria-hidden="true" className="hidden text-[#CBD5DC] sm:inline">
-                    &middot;
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1.5">
-                  {item.icon === 'shield' ? (
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#3E984A]" strokeWidth={2} />
-                  ) : (
-                    <Check className="h-3.5 w-3.5 text-[#3E984A]" strokeWidth={2.4} />
-                  )}
-                  {item.label}
-                </span>
-              </React.Fragment>
-            ))}
+            <span className="inline-flex items-center gap-1.5 font-medium text-[#16241E]">
+              <ShieldCheck className="h-4 w-4 text-[#3E984A]" />
+              Physics-Constrained Optimization
+            </span>
+            <span className="text-[#CFD8D1]">&middot;</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="h-3.5 w-3.5 text-[#3E984A]" />
+              Kirchhoff Power Balance Residual: 0.000 kW
+            </span>
+            <span className="text-[#CFD8D1]">&middot;</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="h-3.5 w-3.5 text-[#3E984A]" />
+              FastAPI + React Telemetry
+            </span>
           </div>
         </div>
 
-        {/* Visual */}
-        <div style={fade(2)}>
+        {/* Right Column: Visual Microgrid Command Canvas & Telemetry HUD */}
+        <div style={fade(2)} className="lg:col-span-5">
           <div
             ref={sceneRef}
             onMouseMove={handleMove}
             onMouseLeave={resetParallax}
-            className="relative h-[340px] overflow-hidden rounded-3xl border border-[#E2E8EB] sm:h-[420px] lg:h-[480px]"
-            style={{
-              background: 'linear-gradient(180deg, #EAF5EC 0%, #F1F8F2 48%, #F6F8F9 100%)',
-            }}
+            className="relative overflow-hidden rounded-[26px] border border-[#DCE7DC] bg-[#103D2B] shadow-[0_28px_60px_-25px_rgba(16,61,43,0.45)]"
           >
-            <div className="absolute inset-0" style={sceneStyle}>
-              <svg
-                viewBox="0 0 640 480"
-                preserveAspectRatio="xMidYMax slice"
-                className="h-full w-full"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <defs>
-                  <linearGradient id="gh-hero-sky" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EAF5EC" />
-                    <stop offset="60%" stopColor="#F1F8F2" />
-                    <stop offset="100%" stopColor="#F6F8F9" />
-                  </linearGradient>
-                </defs>
-
-                <rect width="640" height="480" fill="url(#gh-hero-sky)" />
-                <circle cx="176" cy="108" r="62" fill="#FFFFFF" opacity="0.45" />
-
-                {/* Skyline */}
-                <g fill="#D8E4DC">
-                  <rect x="300" y="250" width="18" height="50" rx="1" />
-                  <rect x="322" y="232" width="24" height="68" rx="1" />
-                  <rect x="350" y="258" width="14" height="42" rx="1" />
-                  <rect x="368" y="244" width="26" height="56" rx="1" />
-                  <rect x="398" y="266" width="18" height="34" rx="1" />
-                  <rect x="420" y="250" width="22" height="50" rx="1" />
-                  <rect x="446" y="236" width="28" height="64" rx="1" />
-                  <rect x="478" y="262" width="20" height="38" rx="1" />
-                  <rect x="502" y="246" width="24" height="54" rx="1" />
-                  <rect x="530" y="270" width="30" height="30" rx="1" />
-                  <rect x="564" y="256" width="20" height="44" rx="1" />
-                  <rect x="588" y="268" width="24" height="32" rx="1" />
-                </g>
-                <g stroke="#CBDCD2" strokeWidth="1">
-                  <line x1="334" y1="232" x2="334" y2="220" />
-                  <line x1="460" y1="236" x2="460" y2="226" />
-                </g>
-
-                {/* Horizon and ground */}
-                <rect x="0" y="282" width="640" height="40" fill="#E7F0E9" opacity="0.85" />
-                <path
-                  d="M0 302 C 120 292 220 308 330 300 C 430 293 540 290 640 300 L640 480 L0 480 Z"
-                  fill="#EAF2EC"
-                />
-                <path
-                  d="M0 302 C 120 292 220 308 330 300 C 430 293 540 290 640 300"
-                  fill="none"
-                  stroke="#DCE9E0"
-                  strokeWidth="1.5"
-                />
-                <path
-                  d="M0 386 C 170 374 330 398 640 378 L640 480 L0 480 Z"
-                  fill="#E5EFE8"
-                  opacity="0.55"
-                />
-
-                {/* Grid traces */}
-                <g fill="none" stroke={C.brand} strokeWidth="1.1" opacity="0.36">
-                  <path d="M300 410 C 380 400 430 372 500 330" strokeDasharray="3 6" />
-                  <path d="M252 436 C 340 424 420 386 524 350" strokeDasharray="3 6" />
-                  <path d="M356 436 C 420 424 480 392 546 360" />
-                  <path d="M468 340 C 496 334 512 330 528 324" />
-                </g>
-                <g fill={C.brand} opacity="0.4">
-                  <circle cx="500" cy="330" r="2" />
-                  <circle cx="524" cy="350" r="2" />
-                  <circle cx="546" cy="360" r="2" />
-                </g>
-
-                {/* Battery storage container */}
-                <ellipse cx="510" cy="318" rx="62" ry="5" fill="#D3E2D9" opacity="0.7" />
-                <rect x="452" y="310" width="116" height="8" rx="3" fill="#D8E4DC" />
-                <rect
-                  x="458"
-                  y="262"
-                  width="104"
-                  height="50"
-                  rx="6"
-                  fill="#FFFFFF"
-                  stroke="#C6D9CD"
-                  strokeWidth="1.2"
-                />
-                <rect x="458" y="262" width="104" height="9" rx="4.5" fill="#F1F8F2" />
-                <g stroke="#DCE9E0" strokeWidth="1">
-                  <line x1="484" y1="276" x2="484" y2="306" />
-                  <line x1="510" y1="276" x2="510" y2="306" />
-                  <line x1="536" y1="276" x2="536" y2="306" />
-                </g>
-                <rect
-                  x="464"
-                  y="276"
-                  width="13"
-                  height="26"
-                  rx="2"
-                  fill="#F6F8F9"
-                  stroke="#DCE9E0"
-                  strokeWidth="0.8"
-                />
-                <rect
-                  x="544"
-                  y="284"
-                  width="12"
-                  height="14"
-                  rx="2"
-                  fill="#F6F8F9"
-                  stroke="#DCE9E0"
-                  strokeWidth="0.8"
-                />
-                <circle cx="552" cy="270" r="3" fill={C.brand} />
-
-                {/* EV charger posts */}
-                <ellipse cx="541" cy="383" rx="10" ry="2.6" fill="#D8E4DC" />
-                <rect
-                  x="535"
-                  y="336"
-                  width="12"
-                  height="46"
-                  rx="4"
-                  fill="#FFFFFF"
-                  stroke="#C6D9CD"
-                  strokeWidth="1.1"
-                />
-                <rect x="537.5" y="342" width="7" height="8" rx="1.5" fill={C.brand} opacity="0.9" />
-                <path
-                  d="M535 362 C 526 368 526 378 534 381"
-                  fill="none"
-                  stroke="#B9CFC0"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-
-                <ellipse cx="566" cy="381" rx="9" ry="2.4" fill="#D8E4DC" />
-                <rect
-                  x="561"
-                  y="342"
-                  width="11"
-                  height="38"
-                  rx="4"
-                  fill="#FFFFFF"
-                  stroke="#C6D9CD"
-                  strokeWidth="1.1"
-                />
-                <rect x="563" y="347" width="6.5" height="7" rx="1.5" fill={C.brand} opacity="0.75" />
-
-                {/* Solar array */}
-                <ellipse cx="400" cy="444" rx="168" ry="9" fill="#DCE9E0" opacity="0.5" />
-                {PANEL_ROWS.map((row) => (
-                  <g key={`row-${row.y}`}>
-                    {row.xs.map((x) => (
-                      <SolarPanel
-                        key={`${row.y}-${x}`}
-                        x={x}
-                        y={row.y}
-                        scale={row.scale}
-                        fill={row.fill}
-                        stroke={row.stroke}
-                      />
-                    ))}
-                  </g>
-                ))}
-              </svg>
-            </div>
-
-            <div className="absolute right-3 top-3 rounded-full border border-[#E2E8EB] bg-white/85 px-2.5 py-1 text-[10px] font-medium text-[#64748B] sm:right-4 sm:top-4 sm:text-[11px]">
-              Simulated demonstration data
-            </div>
-
-            <div
-              className="absolute bottom-4 left-4 w-[196px] rounded-xl border border-[#E2E8EB] bg-white p-3.5 shadow-[0_18px_44px_-26px_rgba(16,61,43,0.45)] sm:bottom-5 sm:left-5 sm:w-[212px]"
-              style={cardStyle}
-            >
-              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#64748B]">
-                Microgrid status
+            {/* Top Toolbar */}
+            <div className="flex items-center justify-between border-b border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#3E984A] shadow-[0_0_8px_#3E984A]" />
+                <span className="text-xs font-semibold text-white tracking-wide">
+                  MICROGRID TOPOLOGY MONITOR
+                </span>
               </div>
-              <div className="mt-2.5 space-y-1.5">
-                {STATUS_ROWS.map((row) => (
-                  <div key={row.label} className="flex items-baseline justify-between gap-3">
-                    <span className="text-[11px] text-[#64748B]">{row.label}</span>
-                    <span className="text-[12px] font-semibold tabular-nums text-[#172535]">
-                      {row.value}
-                    </span>
+              <div className="flex items-center gap-1 rounded-lg bg-black/25 p-0.5 text-[11px] font-medium text-white/90">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('topology')}
+                  className={`rounded px-2 py-0.5 transition-colors ${
+                    activeTab === 'topology' ? 'bg-[#1B5E36] text-white shadow-sm' : 'hover:text-white'
+                  }`}
+                >
+                  Twin Graphic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('telemetry')}
+                  className={`rounded px-2 py-0.5 transition-colors ${
+                    activeTab === 'telemetry' ? 'bg-[#1B5E36] text-white shadow-sm' : 'hover:text-white'
+                  }`}
+                >
+                  Live Telemetry
+                </button>
+              </div>
+            </div>
+
+            {/* Visual Canvas */}
+            <div className="relative h-[360px] sm:h-[400px]">
+              {activeTab === 'topology' ? (
+                <div className="relative h-full w-full">
+                  {/* High quality clean energy photo background blended with illustration */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 ease-out"
+                    style={{
+                      backgroundImage: `url('${HERO_PHOTO}')`,
+                      transform: reduced ? 'none' : `translate3d(${parallax.x * 10}px, ${parallax.y * 10}px, 0) scale(1.04)`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B2A1D] via-[#103D2B]/85 to-[#0F4224]/75" />
+
+                  {/* Microgrid Illustration layer overlay */}
+                  <img
+                    src={heroIllustration}
+                    alt="GridHeal Microgrid Digital Twin Schematic"
+                    className="absolute inset-0 h-full w-full object-contain p-4 opacity-90 transition-transform duration-500 hover:scale-[1.02]"
+                  />
+
+                  {/* Floating Glassmorphic Status Pill */}
+                  <div
+                    className="absolute top-4 left-4 rounded-xl border border-white/20 bg-black/40 px-3 py-2 text-white shadow-lg backdrop-blur-md"
+                    style={{
+                      transform: reduced ? 'none' : `translate3d(${parallax.x * -6}px, ${parallax.y * -6}px, 0)`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Radio className="h-3.5 w-3.5 text-[#9FE1CB] animate-pulse" />
+                      <span className="text-[11px] font-semibold tracking-wide text-white">
+                        GRID-TIED MODE
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[10px] text-white/75">
+                      Bus 1-6 Voltage: 1.002 p.u. · 50.02 Hz
+                    </p>
                   </div>
-                ))}
-              </div>
-              <div className="mt-2.5 border-t border-[#EDF1F3] pt-2.5">
-                <Chip>Simulated &mdash; Normal</Chip>
-              </div>
+
+                  {/* Floating Battery & Solar Quick Pill */}
+                  <div
+                    className="absolute bottom-4 right-4 rounded-xl border border-white/20 bg-white/95 p-3 text-[#16241E] shadow-xl backdrop-blur-md"
+                    style={{
+                      transform: reduced ? 'none' : `translate3d(${parallax.x * 6}px, ${parallax.y * 6}px, 0)`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-[11px]">
+                      <span className="font-semibold text-[#1B5E36]">BESS Buffer</span>
+                      <span className="font-mono font-bold text-[#16241E]">76.2% SoC</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 w-32 rounded-full bg-[#E4E9E4] overflow-hidden">
+                      <div className="h-full rounded-full bg-[#3E984A]" style={{ width: '76.2%' }} />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-[#5B6B62]">
+                      <span>Solar: 128 kW</span>
+                      <span>Discharge: 0 kW</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Telemetry Grid Tab */
+                <div className="h-full p-5 overflow-y-auto bg-[#0B2A1D]/90 text-white">
+                  <div className="grid grid-cols-2 gap-3">
+                    {TELEMETRY_STATS.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={item.label}
+                          className="rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-white/70">{item.label}</span>
+                            <Icon className="h-4 w-4 text-[#9FE1CB]" />
+                          </div>
+                          <div className="mt-1 font-mono text-[18px] font-bold text-white">
+                            {item.value}
+                          </div>
+                          <div className="mt-1 text-[10.5px] font-medium text-[#9FE1CB]">
+                            {item.delta}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-white/15 bg-black/30 p-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#9FE1CB]">Real-time Constraints</span>
+                      <span className="text-[10px] text-white/60">Scanned 12ms ago</span>
+                    </div>
+                    <div className="mt-2 space-y-1.5 text-[11px] text-white/80">
+                      <div className="flex justify-between">
+                        <span>PCC Import Cap:</span>
+                        <span className="font-mono text-white">0 / 500 kW</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Hospital Feeder A:</span>
+                        <span className="font-mono text-[#9FE1CB]">100% Guaranteed</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Active EV Chargers:</span>
+                        <span className="font-mono text-white">6 of 8 sessions</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Status Ticker */}
+            <div className="flex items-center justify-between border-t border-white/15 bg-[#0F4224] px-4 py-2.5 text-[11px] text-white/90">
+              <span className="inline-flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-[#9FE1CB]" />
+                Self-Healing Loop: Standby (Active Health Check)
+              </span>
+              <button
+                type="button"
+                onClick={() => go('recovery')}
+                className="font-semibold text-[#9FE1CB] hover:underline"
+              >
+                Inspect Controller &rarr;
+              </button>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 4 Bottom Key Benchmark KPI Cards - Eliminates whitespace and proves rigorous validation */}
+      <div style={fade(4)} className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {KEY_BENCHMARKS.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-2xl border border-[#E4E9E4] bg-white p-4 shadow-sm hover:border-[#CFE6D5] transition-all hover:shadow-md"
+          >
+            <p className="text-xs font-semibold text-[#5B6B62]">{item.label}</p>
+            <p className="mt-1.5 font-mono text-2xl font-bold text-[#16241E]">{item.value}</p>
+            <p className="mt-1 text-[11.5px] text-[#2E7D47] font-medium">{item.note}</p>
+          </div>
+        ))}
       </div>
     </Section>
   );

@@ -19,12 +19,17 @@ import { HelpSupportView } from './components/HelpSupportView';
 import { FaultModal } from './components/FaultModal';
 import { ExportReportModal } from './components/ExportReportModal';
 import { HomePage } from './home/HomePage';
+import { LoginPage } from './auth/LoginPage';
 
 function MainAppContent() {
   const { activePage } = useMicrogrid();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [faultModalOpen, setFaultModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+
+  if (activePage === 'login') {
+    return <LoginPage />;
+  }
 
   if (activePage === 'home') {
     return <HomePage />;

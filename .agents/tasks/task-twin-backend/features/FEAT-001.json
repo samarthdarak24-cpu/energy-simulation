@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create backend/services/asset_service.py with seven functions that bridge orchestrator simulation state to API layer: get_topology() builds nodes/edges from live orchestrator, get_all_assets() returns list of 8 AssetSchema, get_asset_details(asset_id) returns single asset or raises 404, update_asset_status(asset_id, status) writes to DB Asset table AND applies side-effects to orchestrator models (e.g. grid_sub Offline disconnects orchestrator.grid), calculate_connection_flows() computes kW flows for all 8 connections, get_network_health() calls NetworkValidator.validate_network_state() returning enhanced dict, and sync_assets_to_db() upserts DB Asset rows from orchestrator state. This service is independent and can be completed first.",
+  "status": "pending",
+  "steps": [
+    "Create backend/services/ directory and backend/services/__init__.py",
+    "Create backend/services/asset_service.py with imports: orchestrator from backend.simulation.orchestrator, SessionLocal from backend.database, Asset from backend.models.db_models, AssetSchema and AssetConnectionSchema from backend.models.schemas, HTTPException from fastapi, and NetworkValidator from backend.simulation.network",
+    "Implement get_topology() -> dict: read orchestrator.latest_telemetry, build 8 AssetSchema objects using same logic as twin_router.py /topology endpoint (solar status from fault_reduction_pct, battery from is_tripped, grid from is_connected/is_faulted, loads always Online), build 6 AssetConnectionSchema objects with dynamic flowKw from telemetry, return dict with assets, connections, powerBalanceKw, frequencyHz, voltagePUnit",
+    "Implement get_all_assets() -> List[AssetSchema]: extract the 8 assets from get_topology() result and return the list",
+    "Implement get_asset_details(asset_id: str) -> AssetSchema: call get_all_assets(), find matching id, raise HTTPException 404 if not found, return matched AssetSchema",
+    "Implement calculate_connection_flows() -> List[AssetConnectionSchema]: extract connections from get_topology() result and return list",
+    "Implement get_network_health() -> dict: call orchestrator.validator.validate_network_state() (will be added in FEAT-002), return structured dict with buses, branches, frequency, voltage, convergence, violations",
+    "Implement update_asset_status(asset_id: str, status: str, db: Session) -> AssetSchema: query DB Asset by id, raise 404 if missing, update Asset.status and commit, apply side-effects to orchestrator (grid_sub Offline sets orchestrator.grid.is_connected=False and is_faulted=True, bess_1 Offline sets orchestrator.battery.is_tripped=True, solar_pv Offline sets orchestrator.solar.fault_reduction_pct=100.0), return updated AssetSchema from get_asset_details",
+    "Implement sync_assets_to_db(db: Session): for each of 8 assets from get_all_assets(), upsert DB Asset row matching asset.id with current_power_kw=asset.powerKw, status=asset.status, temperature_c=asset.temperature, efficiency=asset.efficiency; commit at end"
+  ],
+  "acceptance_criteria": [
+    "backend/services/asset_service.py exists with all 7 functions implemented",
+    "get_topology() returns dict with 8 assets and 6 connections matching twin_router.py /topology structure",
+    "get_asset_details('solar_pv') returns AssetSchema, get_asset_details('nonexistent') raises HTTPException 404",
+    "update_asset_status('grid_sub', 'Offline') sets orchestrator.grid.is_connected=False",
+    "sync_assets_to_db() writes 8 rows to Asset table with current values from orchestrator"
+  ],
+  "verification": [
+    "Run pytest backend/tests/test_twin.py::test_asset_service -v (tests will be added in FEAT-003)",
+    "Manually verify no import errors: python -c 'from backend.services.asset_service import get_topology; print(get_topology())'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

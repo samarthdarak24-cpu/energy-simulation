@@ -251,7 +251,7 @@ export const FaultDemoSection: React.FC = () => {
   const statusChip = !scenario
     ? { tone: 'slate' as const, label: 'Idle' }
     : running
-      ? { tone: 'blue' as const, label: 'Simulating' }
+      ? { tone: 'green' as const, label: 'Simulating' }
       : result === 'verified'
         ? { tone: 'green' as const, label: 'Verified' }
         : { tone: 'amber' as const, label: 'Partial' };
@@ -291,19 +291,19 @@ export const FaultDemoSection: React.FC = () => {
       />
 
       <Reveal className="mt-10">
-        <div className="overflow-hidden rounded-2xl border border-[#E2E8EB] bg-white">
+        <div className="overflow-hidden rounded-2xl border border-[#E4E9E4] bg-white">
           <div className="grid gap-0 lg:grid-cols-12">
             {/* Controls */}
-            <div className="min-w-0 border-b border-[#E2E8EB] p-5 sm:p-6 lg:col-span-5 lg:border-r lg:border-b-0">
+            <div className="min-w-0 border-b border-[#E4E9E4] p-5 sm:p-6 lg:col-span-5 lg:border-r lg:border-b-0">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="text-sm font-semibold text-[#172535]">Fault controls</h3>
-                <span className="text-[10.5px] font-medium tracking-[0.08em] text-[#64748B] uppercase">
+                <span className="text-[10.5px] font-medium tracking-[0.08em] text-[#5B6B62] uppercase">
                   Isolated preview
                 </span>
               </div>
 
               <div className="mt-4">
-                <p className="text-[11px] font-semibold tracking-[0.06em] text-[#64748B] uppercase">
+                <p className="text-[11px] font-semibold tracking-[0.06em] text-[#5B6B62] uppercase">
                   Fault type
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -319,14 +319,14 @@ export const FaultDemoSection: React.FC = () => {
                         className={`flex min-w-0 items-center gap-2 rounded-xl border p-2.5 text-left transition-colors duration-200 ${
                           selected
                             ? 'border-[#1B5E36] bg-[#EAF5EC]'
-                            : 'border-[#E2E8EB] bg-white hover:border-[#BFD9C6]'
+                            : 'border-[#E4E9E4] bg-white hover:border-[#BFD9C6]'
                         }`}
                       >
                         <span
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
                             selected
                               ? 'border-[#CFE6D5] bg-white text-[#1B5E36]'
-                              : 'border-[#E2E8EB] bg-[#F6F8F9] text-[#64748B]'
+                              : 'border-[#E4E9E4] bg-[#F7F5F0] text-[#5B6B62]'
                           }`}
                         >
                           <Icon className="h-3.5 w-3.5" />
@@ -346,14 +346,14 @@ export const FaultDemoSection: React.FC = () => {
 
               <div className="mt-5">
                 <div className="flex items-end justify-between gap-3">
-                  <label htmlFor="fault-severity" className="text-[11px] font-semibold tracking-[0.06em] text-[#64748B] uppercase">
+                  <label htmlFor="fault-severity" className="text-[11px] font-semibold tracking-[0.06em] text-[#5B6B62] uppercase">
                     Severity
                   </label>
                   <div className="flex items-baseline">
                     <span className="font-mono text-[26px] leading-none font-semibold text-[#172535]">
                       {severity}
                     </span>
-                    <span className="ml-0.5 text-[13px] font-medium text-[#64748B]">%</span>
+                    <span className="ml-0.5 text-[13px] font-medium text-[#5B6B62]">%</span>
                   </div>
                 </div>
                 <input
@@ -367,7 +367,7 @@ export const FaultDemoSection: React.FC = () => {
                   className="mt-3 h-1.5 w-full cursor-pointer accent-[#1B5E36]"
                   style={{ accentColor: C.forest }}
                 />
-                <p className="mt-1.5 text-[11px] text-[#64748B]">
+                <p className="mt-1.5 text-[11px] text-[#5B6B62]">
                   e.g. {severity}% {selectedFault.caption}
                 </p>
               </div>
@@ -375,7 +375,7 @@ export const FaultDemoSection: React.FC = () => {
               <div className="mt-5">
                 <label
                   htmlFor="fault-duration"
-                  className="text-[11px] font-semibold tracking-[0.06em] text-[#64748B] uppercase"
+                  className="text-[11px] font-semibold tracking-[0.06em] text-[#5B6B62] uppercase"
                 >
                   Duration
                 </label>
@@ -384,7 +384,7 @@ export const FaultDemoSection: React.FC = () => {
                     id="fault-duration"
                     value={duration}
                     onChange={(event) => setDuration(event.target.value as DurationKey)}
-                    className="w-full appearance-none rounded-xl border border-[#E2E8EB] bg-white px-3 py-2.5 text-sm font-medium text-[#172535] transition-colors duration-200 outline-none hover:border-[#BFD9C6] focus:border-[#1B5E36]"
+                    className="w-full appearance-none rounded-xl border border-[#E4E9E4] bg-white px-3 py-2.5 text-sm font-medium text-[#172535] transition-colors duration-200 outline-none hover:border-[#BFD9C6] focus:border-[#1B5E36]"
                   >
                     {DURATIONS.map((item) => (
                       <option key={item} value={item}>
@@ -392,7 +392,7 @@ export const FaultDemoSection: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-[#5B6B62]" />
                 </div>
               </div>
 
@@ -410,16 +410,16 @@ export const FaultDemoSection: React.FC = () => {
                 </SecondaryButton>
               </div>
 
-              <p className="mt-3 text-[11px] leading-relaxed text-[#64748B]">
+              <p className="mt-3 text-[11px] leading-relaxed text-[#5B6B62]">
                 Runs an isolated preview. Your active simulation is not modified.
               </p>
             </div>
 
             {/* System response */}
-            <div className="min-w-0 bg-[#F6F8F9] p-5 sm:p-6 lg:col-span-7">
+            <div className="min-w-0 bg-[#F7F5F0] p-5 sm:p-6 lg:col-span-7">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10.5px] font-semibold tracking-[0.12em] text-[#64748B] uppercase">
+                  <p className="text-[10.5px] font-semibold tracking-[0.12em] text-[#5B6B62] uppercase">
                     System response
                   </p>
                   <h3 className="mt-1 text-[17px] leading-snug font-semibold text-[#172535] sm:text-lg">
@@ -430,7 +430,7 @@ export const FaultDemoSection: React.FC = () => {
               </div>
 
               <div className="mt-5">
-                <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#64748B] uppercase">
+                <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#5B6B62] uppercase">
                   Live energy balance
                 </p>
                 <div className="mt-2 grid grid-cols-3 gap-2">
@@ -440,12 +440,12 @@ export const FaultDemoSection: React.FC = () => {
                     { label: 'Battery SoC', value: values.soc, unit: '%' },
                   ].map((stat) => (
                     <Card key={stat.label} className="min-w-0 p-2.5 sm:p-3">
-                      <p className="truncate text-[10px] font-medium text-[#64748B]">{stat.label}</p>
+                      <p className="truncate text-[10px] font-medium text-[#5B6B62]">{stat.label}</p>
                       <p className="mt-1 flex items-baseline gap-1">
                         <span className="font-mono text-[17px] leading-none font-semibold text-[#172535] sm:text-[19px]">
                           {stat.value}
                         </span>
-                        <span className="text-[10px] font-medium text-[#64748B]">{stat.unit}</span>
+                        <span className="text-[10px] font-medium text-[#5B6B62]">{stat.unit}</span>
                       </p>
                     </Card>
                   ))}
@@ -467,15 +467,15 @@ export const FaultDemoSection: React.FC = () => {
                       <p className={`text-[12.5px] font-semibold ${alertStyles.title}`}>
                         {ALERT_TITLES[scenario.fault]}
                       </p>
-                      <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#475569]">
+                      <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#324339]">
                         {alertDetail(scenario)}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-[#D5DEE3] bg-white/60 p-3">
-                    <p className="text-[12.5px] font-semibold text-[#475569]">No active fault</p>
-                    <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#64748B]">
+                    <p className="text-[12.5px] font-semibold text-[#324339]">No active fault</p>
+                    <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#5B6B62]">
                       Select a scenario and run the preview to see the response.
                     </p>
                   </div>
@@ -484,10 +484,10 @@ export const FaultDemoSection: React.FC = () => {
 
               <div className="mt-5">
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#64748B] uppercase">
+                  <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#5B6B62] uppercase">
                     Recovery pipeline
                   </p>
-                  <span className="font-mono text-[10.5px] text-[#64748B]">
+                  <span className="font-mono text-[10.5px] text-[#5B6B62]">
                     {scenario ? `${Math.min(Math.max(phase, 0), 4) + 1} / 5` : '0 / 5'}
                   </span>
                 </div>
@@ -508,7 +508,7 @@ export const FaultDemoSection: React.FC = () => {
                         </div>
                         <p
                           className={`mt-1.5 text-[8.5px] leading-tight font-medium whitespace-nowrap sm:text-[10px] ${
-                            reached ? 'text-[#1B5E36]' : 'text-[#64748B]'
+                            reached ? 'text-[#1B5E36]' : 'text-[#5B6B62]'
                           }`}
                         >
                           {label}
@@ -520,16 +520,16 @@ export const FaultDemoSection: React.FC = () => {
               </div>
 
               <div className="mt-5">
-                <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#64748B] uppercase">
+                <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#5B6B62] uppercase">
                   Control decisions
                 </p>
                 <div className="mt-2 space-y-1.5">
                   {visibleDecisions.length === 0 ? (
-                    <p className="text-[11.5px] text-[#64748B]">No actions issued yet.</p>
+                    <p className="text-[11.5px] text-[#5B6B62]">No actions issued yet.</p>
                   ) : (
                     visibleDecisions.map((item) => (
                       <Reveal key={item.text}>
-                        <div className="flex items-center gap-2 rounded-lg border border-[#E2E8EB] bg-white px-2.5 py-2">
+                        <div className="flex items-center gap-2 rounded-lg border border-[#E4E9E4] bg-white px-2.5 py-2">
                           <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#EAF5EC]">
                             <Check className="h-2.5 w-2.5 text-[#1B5E36]" />
                           </span>
@@ -545,14 +545,14 @@ export const FaultDemoSection: React.FC = () => {
 
               <div className="mt-5">
                 <div className="flex items-end justify-between gap-3">
-                  <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#64748B] uppercase">
+                  <p className="text-[10.5px] font-semibold tracking-[0.08em] text-[#5B6B62] uppercase">
                     Critical load service
                   </p>
                   <p className="flex items-baseline">
                     <span className="font-mono text-[24px] leading-none font-semibold text-[#172535]">
                       {criticalService}
                     </span>
-                    <span className="ml-0.5 text-[12px] font-medium text-[#64748B]">%</span>
+                    <span className="ml-0.5 text-[12px] font-medium text-[#5B6B62]">%</span>
                   </p>
                 </div>
                 <div
@@ -593,7 +593,7 @@ export const FaultDemoSection: React.FC = () => {
                         >
                           {result === 'verified' ? 'Recovery verified' : 'Partial recovery'}
                         </p>
-                        <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#475569]">
+                        <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#324339]">
                           {result === 'verified'
                             ? 'All checks passed in the simulated run.'
                             : 'The scenario exceeds available flexibility in this preview.'}
@@ -608,7 +608,7 @@ export const FaultDemoSection: React.FC = () => {
                               )}
                               <span
                                 className={`text-[11px] leading-tight ${
-                                  check.ok ? 'text-[#475569]' : 'font-medium text-[#A31F2C]'
+                                  check.ok ? 'text-[#324339]' : 'font-medium text-[#A31F2C]'
                                 }`}
                               >
                                 {check.label}
@@ -622,7 +622,7 @@ export const FaultDemoSection: React.FC = () => {
                 </Reveal>
               )}
 
-              <p className="mt-4 text-[10.5px] leading-relaxed text-[#64748B]">
+              <p className="mt-4 text-[10.5px] leading-relaxed text-[#5B6B62]">
                 Deterministic simulated preview. Results are illustrative and not real-world validation.
               </p>
             </div>

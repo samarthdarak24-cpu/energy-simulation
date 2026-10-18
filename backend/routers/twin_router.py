@@ -175,7 +175,13 @@ def get_digital_twin_topology():
         connections=connections,
         powerBalanceKw=t["netBalanceKw"],
         frequencyHz=t.get("frequencyHz", 50.0),
-        voltagePUnit=t.get("voltagePu", 1.0)
+        voltagePUnit=t.get("voltagePu", 1.0),
+        feederLoadingPct=t.get("feederLoadingPct", 0.0),
+        transformerLoadingPct=t.get("transformerLoadingPct", 0.0),
+        networkLossesKw=t.get("networkLossesKw", 0.0),
+        powerFlowConverged=t.get("powerFlowConverged", True),
+        connectivity=t.get("connectivity", "grid_connected"),
+        busVoltages=t.get("busVoltages", {})
     )
 
 
@@ -187,5 +193,11 @@ def get_network_validation():
         "frequencyHz": t.get("frequencyHz", 50.0),
         "voltagePu": t.get("voltagePu", 1.0),
         "mismatchKw": round(abs(t["totalSupply"] - t["totalDemand"]), 2),
-        "constraintViolations": t["constraintViolations"]
+        "constraintViolations": t["constraintViolations"],
+        "feederLoadingPct": t.get("feederLoadingPct", 0.0),
+        "transformerLoadingPct": t.get("transformerLoadingPct", 0.0),
+        "networkLossesKw": t.get("networkLossesKw", 0.0),
+        "powerFlowConverged": t.get("powerFlowConverged", True),
+        "connectivity": t.get("connectivity", "grid_connected"),
+        "busVoltages": t.get("busVoltages", {})
     }

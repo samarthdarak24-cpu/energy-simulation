@@ -15,13 +15,13 @@ const PreviewWindow: React.FC<{ label: string; children: React.ReactNode }> = ({
     aria-hidden="true"
     focusable="false"
   >
-    <rect x="16" y="12" width="408" height="176" rx="10" fill="#FFFFFF" stroke="#E2E8EB" />
-    <path d="M16 22a10 10 0 0 1 10-10h388a10 10 0 0 1 10 10v18H16Z" fill="#F6F8F9" />
-    <line x1="16" y1="40" x2="424" y2="40" stroke="#E2E8EB" />
+    <rect x="16" y="12" width="408" height="176" rx="10" fill="#FFFFFF" stroke="#E4E9E4" />
+    <path d="M16 22a10 10 0 0 1 10-10h388a10 10 0 0 1 10 10v18H16Z" fill="#F7F5F0" />
+    <line x1="16" y1="40" x2="424" y2="40" stroke="#E4E9E4" />
     <circle cx="32" cy="26" r="3" fill="#D8DEE3" />
     <circle cx="44" cy="26" r="3" fill="#D8DEE3" />
     <circle cx="56" cy="26" r="3" fill="#D8DEE3" />
-    <text x="72" y="29.5" fontSize="9" fontWeight="600" letterSpacing="0.06em" fill="#94A3B8">
+    <text x="72" y="29.5" fontSize="9" fontWeight="600" letterSpacing="0.06em" fill="#8AA395">
       {label}
     </text>
     {children}
@@ -112,7 +112,7 @@ const FaultStudioPreview: React.FC = () => (
     <line x1="300" y1="113" x2="300" y2="132" stroke={C.text} strokeWidth="1.6" />
     <circle cx="300" cy="122.5" r="3" fill={C.text} stroke="#FFFFFF" strokeWidth="1.2" />
 
-    <line x1="30" y1="148" x2="410" y2="148" stroke="#F1F4F6" />
+    <line x1="30" y1="148" x2="410" y2="148" stroke="#F3EFE9" />
     <text x="30" y="166" fontSize="8.5" fill={C.muted}>
       Scenario
     </text>
@@ -125,10 +125,10 @@ const FaultStudioPreview: React.FC = () => (
 const ForecastingPreview: React.FC = () => (
   <PreviewWindow label="Forecasting">
     {[76, 104, 132, 160].map((y) => (
-      <line key={`h-${y}`} x1="30" y1={y} x2="410" y2={y} stroke="#F1F4F6" />
+      <line key={`h-${y}`} x1="30" y1={y} x2="410" y2={y} stroke="#F3EFE9" />
     ))}
     {[120, 210, 300, 390].map((x) => (
-      <line key={`v-${x}`} x1={x} y1="56" x2={x} y2="168" stroke="#F6F8F9" />
+      <line key={`v-${x}`} x1={x} y1="56" x2={x} y2="168" stroke="#F7F5F0" />
     ))}
     <line x1="30" y1="168" x2="410" y2="168" stroke={C.border} />
 
@@ -153,7 +153,7 @@ const ForecastingPreview: React.FC = () => (
     />
     <line x1="200" y1="56" x2="200" y2="168" stroke="#CFE6D5" strokeDasharray="3 4" />
     <circle cx="200" cy="95" r="3.5" fill="#FFFFFF" stroke={C.forest} strokeWidth="1.5" />
-    <text x="206" y="60" fontSize="8" fill="#94A3B8">
+    <text x="206" y="60" fontSize="8" fill="#8AA395">
       Now
     </text>
 
@@ -195,7 +195,7 @@ const RecoveryPreview: React.FC = () => (
             stroke={active ? C.forest : C.border}
             strokeWidth={active ? 1.3 : 1}
           />
-          <text x={x + 12} y="102" fontSize="8" fontWeight="600" fill={active ? C.forest : '#94A3B8'}>
+          <text x={x + 12} y="102" fontSize="8" fontWeight="600" fill={active ? C.forest : '#8AA395'}>
             {`0${index + 1}`}
           </text>
           <text
@@ -227,7 +227,7 @@ const BENCHMARK_GROUPS: { label: string; heights: [number, number, number] }[] =
 const BenchmarkingPreview: React.FC = () => (
   <PreviewWindow label="Benchmarking">
     {[96, 132].map((y) => (
-      <line key={`grid-${y}`} x1="30" y1={y} x2="410" y2={y} stroke="#F1F4F6" />
+      <line key={`grid-${y}`} x1="30" y1={y} x2="410" y2={y} stroke="#F3EFE9" />
     ))}
     <line x1="30" y1="166" x2="410" y2="166" stroke={C.border} />
 
@@ -251,7 +251,7 @@ const BenchmarkingPreview: React.FC = () => (
             y="180"
             textAnchor="middle"
             fontSize="8.5"
-            fill="#94A3B8"
+            fill="#8AA395"
           >
             {group.label}
           </text>
@@ -261,28 +261,28 @@ const BenchmarkingPreview: React.FC = () => (
   </PreviewWindow>
 );
 
-const LOG_ROWS: { time: string; event: string; status: string; tone: 'red' | 'green' | 'blue' }[] = [
+const LOG_ROWS: { time: string; event: string; status: string; tone: 'red' | 'green' | 'slate' }[] = [
   { time: '12:04:11', event: 'Solar output dip', status: 'Detected', tone: 'red' },
   { time: '12:04:18', event: 'Battery discharge', status: 'Applied', tone: 'green' },
   { time: '12:04:26', event: 'Constraint check', status: 'Passed', tone: 'green' },
-  { time: '12:04:40', event: 'Critical load restored', status: 'Resolved', tone: 'blue' },
+  { time: '12:04:40', event: 'Critical load restored', status: 'Resolved', tone: 'slate' },
 ];
 
-const LOG_PILL: Record<'red' | 'green' | 'blue', { fill: string; stroke: string; text: string }> = {
+const LOG_PILL: Record<'red' | 'green' | 'slate', { fill: string; stroke: string; text: string }> = {
   red: { fill: '#FCECEE', stroke: '#F3C7CD', text: '#A31F2C' },
   green: { fill: '#EAF5EC', stroke: '#CFE6D5', text: '#1B5E36' },
-  blue: { fill: '#ECF2FC', stroke: '#C9DBF5', text: '#25508F' },
+  slate: { fill: '#F3EFE9', stroke: '#E4DECF', text: '#5C6B62' },
 };
 
 const EventLogsPreview: React.FC = () => (
   <PreviewWindow label="Event logs">
-    <text x="30" y="60" fontSize="7.5" letterSpacing="0.08em" fill="#94A3B8">
+    <text x="30" y="60" fontSize="7.5" letterSpacing="0.08em" fill="#8AA395">
       TIME
     </text>
-    <text x="92" y="60" fontSize="7.5" letterSpacing="0.08em" fill="#94A3B8">
+    <text x="92" y="60" fontSize="7.5" letterSpacing="0.08em" fill="#8AA395">
       EVENT
     </text>
-    <text x="410" y="60" textAnchor="end" fontSize="7.5" letterSpacing="0.08em" fill="#94A3B8">
+    <text x="410" y="60" textAnchor="end" fontSize="7.5" letterSpacing="0.08em" fill="#8AA395">
       STATUS
     </text>
     <line x1="30" y1="66" x2="410" y2="66" stroke={C.border} />
@@ -309,7 +309,7 @@ const EventLogsPreview: React.FC = () => (
           >
             {row.status}
           </text>
-          <line x1="30" y1={top + 24} x2="410" y2={top + 24} stroke="#F1F4F6" />
+          <line x1="30" y1={top + 24} x2="410" y2={top + 24} stroke="#F3EFE9" />
         </g>
       );
     })}
@@ -340,7 +340,7 @@ const FeatureCard: React.FC<{
           className="flex h-full w-full flex-col text-left outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#3E984A]"
         >
           <div
-            className={`w-full overflow-hidden border-b border-[#E2E8EB] ${
+            className={`w-full overflow-hidden border-b border-[#E4E9E4] ${
               featured ? 'h-52' : 'h-40'
             }`}
             style={{ backgroundColor: C.bg }}
@@ -359,7 +359,7 @@ const FeatureCard: React.FC<{
               {title}
             </h3>
             <p
-              className={`mt-2 leading-relaxed text-[#64748B] ${
+              className={`mt-2 leading-relaxed text-[#5B6B62] ${
                 featured ? 'max-w-[46ch] text-[14px]' : 'text-[13px]'
               }`}
             >

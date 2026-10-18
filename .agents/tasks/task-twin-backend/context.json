@@ -1,0 +1,24 @@
+{
+  "project_type": "FastAPI backend with SQLAlchemy ORM and synchronous simulation engine",
+  "language": "Python 3.12",
+  "build_system": "pip with requirements.txt",
+  "test_framework": "pytest with FastAPI TestClient",
+  "build_command": "N/A (interpreted Python)",
+  "test_command": "pytest backend/tests/ -v",
+  "verification_instructions": "Run pytest with -v flag to execute all tests in backend/tests/. Tests use in-memory SQLite and auto-reset orchestrator via conftest.py fixtures.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "DATABASE_URL set to sqlite:///:memory: in conftest.py for tests. Orchestrator is a global singleton that must be reset between tests. WebSocket broadcasting uses asyncio.Queue list in orchestrator.active_subscribers.",
+  "contribution_requirements": "All new endpoints must be added to routers with proper Pydantic schemas. Database operations use SessionLocal context manager. Orchestrator owns authoritative simulation state; DB is persistence layer only.",
+  "key_patterns": "Routers import orchestrator singleton and read orchestrator.latest_telemetry for live state. DB models in backend/models/db_models.py, Pydantic schemas in backend/models/schemas.py. Tests use client fixture from conftest.py with TestClient(app). Asset status mapping: Solar uses fault_reduction_pct for Online/Degraded/Faulted, Battery uses is_tripped for Connected/Faulted, Grid uses is_connected and is_faulted for Connected/Faulted status.",
+  "relevant_files": [
+    "backend/routers/twin_router.py",
+    "backend/simulation/orchestrator.py",
+    "backend/simulation/network.py",
+    "backend/models/schemas.py",
+    "backend/models/db_models.py",
+    "backend/database.py",
+    "backend/tests/conftest.py",
+    "backend/tests/test_api_endpoints.py"
+  ],
+  "directory_structure": "backend/ contains routers/ (API endpoints), simulation/ (orchestrator + domain models), models/ (schemas.py Pydantic, db_models.py SQLAlchemy), tests/ (pytest suite with conftest.py). No services/ directory exists yet."
+}

@@ -1,0 +1,51 @@
+{
+  "dataset_name": "GridHeal: Physics-Constrained Microgrid Synthetic Dataset",
+  "generated_at": "2026-10-18T06:34:03.507424+00:00",
+  "random_seed": 42,
+  "mode": "smoke_test",
+  "files": {
+    "baseline_timeseries": {
+      "file": "data/synthetic/baseline_operational_timeseries.csv",
+      "rows": 2880,
+      "columns": 50
+    },
+    "combined_operational": {
+      "file": "data/synthetic/microgrid_operational_dataset.csv",
+      "rows": 5040,
+      "columns": 50
+    },
+    "fault_episodes_optimizer": {
+      "file": "data/synthetic/fault_episodes_optimizer.csv",
+      "rows": 2160,
+      "columns": 50
+    },
+    "fault_episodes_baseline": {
+      "file": "data/synthetic/fault_episodes_baseline.csv",
+      "rows": 2160,
+      "columns": 50
+    },
+    "forecasting_dataset": {
+      "file": "data/processed/forecasting_dataset.csv",
+      "rows": 4920,
+      "columns": 42
+    },
+    "fault_detection_dataset": {
+      "file": "data/processed/fault_detection_dataset.csv",
+      "rows": 5040,
+      "columns": 25
+    },
+    "recovery_evaluation_dataset": {
+      "file": "data/processed/recovery_evaluation_dataset.csv",
+      "rows": 2160,
+      "columns": 22
+    }
+  },
+  "quality_metrics": {
+    "max_power_balance_error_kw": 0.0,
+    "mean_power_balance_error_kw": 0.0,
+    "power_balance_tolerance_kw": 0.05,
+    "verification_passed_pct": 100.0,
+    "leak_free_guarantee": true
+  },
+  "data_origin": "Physics-Constrained Synthetic"
+}

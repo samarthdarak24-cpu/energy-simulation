@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section, SectionHeading, Reveal, C } from '../ui';
 
-type SdgTone = 'green' | 'blue' | 'mint' | 'amber';
+type SdgTone = 'green' | 'clay' | 'mint' | 'amber';
 
 interface Sdg {
   number: string;
@@ -21,7 +21,7 @@ const sdgs: Sdg[] = [
     number: '9',
     title: 'Industry, innovation and infrastructure',
     description: 'Test resilient infrastructure control logic.',
-    tone: 'blue',
+    tone: 'clay',
   },
   {
     number: '11',
@@ -39,7 +39,7 @@ const sdgs: Sdg[] = [
 
 const badgeTones: Record<SdgTone, { bg: string; fg: string }> = {
   green: { bg: '#EAF5EC', fg: '#1B5E36' },
-  blue: { bg: '#ECF2FC', fg: '#25508F' },
+  clay: { bg: '#F6E7DD', fg: '#9A4F2C' },
   mint: { bg: '#E7F1E9', fg: '#103D2B' },
   amber: { bg: '#FDF4E3', fg: '#8A5D0A' },
 };
@@ -236,7 +236,7 @@ export const SustainabilitySection: React.FC = () => {
             return (
               <Reveal key={sdg.number} delay={index * 80}>
                 <div
-                  className="flex items-start gap-3.5 rounded-xl border border-[#E2E8EB] bg-white p-4 transition-all duration-200 hover:border-[#BFD9C6] hover:shadow-[0_12px_28px_-22px_rgba(16,61,43,0.45)]"
+                  className="flex items-start gap-3.5 rounded-xl border border-[#E4E9E4] bg-white p-4 transition-all duration-200 hover:border-[#BFD9C6] hover:shadow-[0_12px_28px_-22px_rgba(16,61,43,0.45)]"
                 >
                   <div
                     className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl"

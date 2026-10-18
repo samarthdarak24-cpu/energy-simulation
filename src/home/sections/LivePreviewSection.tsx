@@ -217,14 +217,14 @@ export const LivePreviewSection: React.FC = () => {
               className={`rounded-full border px-4 py-2 text-xs font-semibold transition-colors duration-200 ${
                 active
                   ? 'border-[#1B5E36] bg-[#1B5E36] text-white'
-                  : 'border-[#E2E8EB] bg-white text-[#475569] hover:border-[#BFD9C6] hover:text-[#1B5E36]'
+                  : 'border-[#E4E9E4] bg-white text-[#324339] hover:border-[#BFD9C6] hover:text-[#1B5E36]'
               }`}
             >
               {item.label}
             </button>
           );
         })}
-        <span className="text-xs text-[#64748B] sm:ml-auto">Interactive simulated preview</span>
+        <span className="text-xs text-[#5B6B62] sm:ml-auto">Interactive simulated preview</span>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-12">
@@ -233,7 +233,7 @@ export const LivePreviewSection: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-[#172535]">Microgrid energy flow</h3>
-                <p className="mt-0.5 text-xs text-[#64748B]">Simulated topology · 6 nodes</p>
+                <p className="mt-0.5 text-xs text-[#5B6B62]">Simulated topology · 6 nodes</p>
               </div>
               <Chip tone={scenario.statusTone}>{scenario.status}</Chip>
             </div>
@@ -290,13 +290,13 @@ export const LivePreviewSection: React.FC = () => {
                       <Icon className="h-4 w-4 text-[#1B5E36]" />
                     </span>
                   </div>
-                  <p className="mt-3 text-[11px] leading-tight font-medium text-[#64748B]">{metric.label}</p>
+                  <p className="mt-3 text-[11px] leading-tight font-medium text-[#5B6B62]">{metric.label}</p>
                   <p
                     className="mt-1.5 text-[24px] leading-none font-semibold text-[#172535]"
                     style={{ opacity: settling ? 0.4 : 1, transition: 'opacity 200ms ease, color 200ms ease' }}
                   >
                     <span className="font-mono">{metric.value}</span>
-                    <span className="ml-1 text-[12px] font-medium text-[#64748B]">{metric.unit}</span>
+                    <span className="ml-1 text-[12px] font-medium text-[#5B6B62]">{metric.unit}</span>
                   </p>
                   <p
                     className="mt-2 text-[10.5px] leading-tight font-medium"
@@ -311,8 +311,8 @@ export const LivePreviewSection: React.FC = () => {
         </Reveal>
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 border-t border-[#E2E8EB] pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-xl text-xs leading-relaxed text-[#64748B]">
+      <div className="mt-6 flex flex-col gap-4 border-t border-[#E4E9E4] pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-xl text-xs leading-relaxed text-[#5B6B62]">
           Values are deterministic demo fixtures — the live simulation is unaffected.
         </p>
         <PrimaryButton onClick={() => go('twin')}>Explore Digital Twin</PrimaryButton>

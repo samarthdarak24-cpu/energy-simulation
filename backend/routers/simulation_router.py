@@ -18,6 +18,20 @@ def get_telemetry_history(limit: int = 60):
     return orchestrator.history[-limit:]
 
 
+@router.get('/status')
+def get_simulation_status():
+    """Get current simulation status and metadata."""
+    return {
+        'runId': orchestrator.run_id,
+        'simulationStatus': orchestrator.latest_telemetry.get('simulationStatus', 'paused'),
+        'isRunning': orchestrator.clock.is_running,
+        'currentStep': orchestrator.clock.current_step,
+        'simulatedTime': orchestrator.clock.current_time_str,
+        'speed': orchestrator.clock.speed,
+        'elapsedMinutes': orchestrator.clock.elapsed_minutes,
+    }
+
+
 @router.post("/control")
 def control_simulation(req: SimulationControlRequest):
     """Control simulation lifecycle (start, pause, resume, reset, step)."""

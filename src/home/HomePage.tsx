@@ -20,7 +20,8 @@ export const HomePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-white font-sans text-[#172535] antialiased">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#FCFBF8] font-sans text-[#16241E] antialiased">
+      <div className="gh-grain" aria-hidden="true" />
       <Navbar />
       <main>
         <HeroSection />

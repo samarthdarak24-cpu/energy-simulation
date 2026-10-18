@@ -1,0 +1,53 @@
+# GridHeal Microgrid Digital Twin Configuration
+# Defines physical capacities, electrical bounds, efficiencies, and nominal operating setpoints.
+
+microgrid_name: "GridHeal Campus Microgrid"
+data_origin: "Physics-Constrained Synthetic"
+simulation_version: "1.0.0"
+
+solar:
+  installed_capacity_kw: 160.0
+  inverter_capacity_kw: 160.0
+  module_efficiency: 0.92
+  temperature_coefficient_pct_c: -0.40  # -0.40% power loss per degree C above 25C
+  nominal_cell_temperature_c: 25.0
+  inverter_efficiency: 0.97
+  irradiance_stc_w_m2: 1000.0
+
+battery:
+  nominal_capacity_kwh: 200.0
+  usable_capacity_kwh: 150.0   # 200 * (95% - 20%)
+  min_soc_pct: 20.0
+  max_soc_pct: 95.0
+  reserve_soc_pct: 30.0        # Emergency islanding reserve
+  initial_soc_pct: 75.0
+  max_charge_power_kw: 60.0    # 0.3C rate
+  max_discharge_power_kw: 60.0 # 0.3C rate
+  charge_efficiency: 0.95      # round-trip ~ 90.2%
+  discharge_efficiency: 0.95
+  thermal_capacity_j_k: 500000.0
+
+grid:
+  interconnection_capacity_kw: 100.0
+  max_export_capacity_kw: 80.0
+  nominal_voltage_v: 400.0
+  nominal_frequency_hz: 50.0
+  import_tariff_usd_per_kwh: 0.18
+  export_tariff_usd_per_kwh: 0.08
+  grid_carbon_intensity_kg_per_kwh: 0.450
+
+loads:
+  critical_base_kw: 40.0       # Hospital / Data Center / Life Support (strictly prioritized)
+  residential_base_kw: 35.0    # Essential lighting & appliances
+  commercial_base_kw: 20.0     # Offices, cooling, labs
+  flexible_base_kw: 10.0       # Deferrable thermal storage / HVAC fleet
+
+ev_charging:
+  num_chargers: 6
+  max_station_demand_kw: 40.0
+  charger_rating_kw: 7.4       # Level 2 AC chargers
+  max_deferral_ratio: 0.80     # Up to 80% can be shifted during recovery
+
+electrical_network:
+  distribution_loss_factor: 0.02 # 2% ohmic losses on microgrid distribution feeders
+  power_balance_tolerance_kw: 0.05 # Numerical tolerance threshold for Kirchhoff power conservation

@@ -224,7 +224,7 @@ const StageVisual: React.FC<{ stage: Stage }> = ({ stage }) => {
                 width={118}
                 height={44}
                 rx={10}
-                fill={node.chosen ? C.soft : '#F1F4F6'}
+                fill={node.chosen ? C.soft : '#F3EFE9'}
                 stroke={node.chosen ? '#BFD9C6' : C.border}
                 strokeWidth={1.2}
               />
@@ -232,14 +232,14 @@ const StageVisual: React.FC<{ stage: Stage }> = ({ stage }) => {
                 cx={node.x - 42}
                 cy={node.y}
                 r={4}
-                fill={node.chosen ? C.brand : '#CBD5E1'}
+                fill={node.chosen ? C.brand : '#C9D3CC'}
               />
               <text
                 x={node.x - 30}
                 y={node.y + 4}
                 fontSize={10.5}
                 fontWeight={600}
-                fill={node.chosen ? C.forest : '#94A3B8'}
+                fill={node.chosen ? C.forest : '#8AA395'}
               >
                 {node.label}
               </text>

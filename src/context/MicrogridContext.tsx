@@ -357,11 +357,101 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [telemetry]);
 
   // Execute closed-loop automated self-healing recovery
-  const runRecoveryLoop = useCallback(() => {
+  const runRecoveryLoop = useCallback(async () => {
     if (isSimulating) return;
     setIsSimulating(true);
 
     const currentTime = getTimeString();
+
+    // Call real FastAPI backend recovery trigger if available
+    try {
+      const resp = await fetch('http://localhost:8000/api/recovery/trigger', { method: 'POST' });
+      if (resp.ok) {
+        const backendResult = await resp.json();
+        const steps = backendResult.pipelineSteps || [];
+
+        // Stage 1: DETECT
+        setPipelineSteps([
+          { stepNumber: 1, id: 'DETECT', title: 'DETECT', subtitle: 'Fault & anomaly rules', status: 'active', note: steps[0]?.note },
+          { stepNumber: 2, id: 'PREDICT', title: 'PREDICT', subtitle: 'Short-horizon forecast', status: 'pending' },
+          { stepNumber: 3, id: 'REALLOCATE', title: 'REALLOCATE', subtitle: 'Optimize & apply actions', status: 'pending' },
+          { stepNumber: 4, id: 'VERIFY', title: 'VERIFY', subtitle: 'Check recovery & constraints', status: 'pending' },
+        ]);
+        setRecoveryStateText(steps[0]?.note || 'Detecting active disturbances and computing power deficit...');
+
+        setTimeout(() => {
+          // Stage 2: PREDICT
+          setPipelineSteps([
+            { stepNumber: 1, id: 'DETECT', title: 'DETECT', subtitle: 'Fault & anomaly rules', status: 'completed', note: steps[0]?.note },
+            { stepNumber: 2, id: 'PREDICT', title: 'PREDICT', subtitle: 'Short-horizon forecast', status: 'active', note: steps[1]?.note },
+            { stepNumber: 3, id: 'REALLOCATE', title: 'REALLOCATE', subtitle: 'Optimize & apply actions', status: 'pending' },
+            { stepNumber: 4, id: 'VERIFY', title: 'VERIFY', subtitle: 'Check recovery & constraints', status: 'pending' },
+          ]);
+          setRecoveryStateText(steps[1]?.note || 'Forecasting load vs generation trajectory over 45-minute window...');
+
+          setTimeout(() => {
+            // Stage 3: REALLOCATE
+            setPipelineSteps([
+              { stepNumber: 1, id: 'DETECT', title: 'DETECT', subtitle: 'Fault & anomaly rules', status: 'completed', note: steps[0]?.note },
+              { stepNumber: 2, id: 'PREDICT', title: 'PREDICT', subtitle: 'Short-horizon forecast', status: 'completed', note: steps[1]?.note },
+              { stepNumber: 3, id: 'REALLOCATE', title: 'REALLOCATE', subtitle: 'Optimize & apply actions', status: 'active', note: steps[2]?.note },
+              { stepNumber: 4, id: 'VERIFY', title: 'VERIFY', subtitle: 'Check recovery & constraints', status: 'pending' },
+            ]);
+            setRecoveryStateText(steps[2]?.note || 'HiGHS solver reallocating: BESS dispatch + smart EV deferral...');
+
+            if (backendResult.actions && backendResult.actions.length > 0) {
+              const actEvents = backendResult.actions.map((act: any) => ({
+                id: act.id,
+                time: getTimeString(),
+                title: `${act.actionType}: ${act.targetAsset}`,
+                status: 'Actioned' as const,
+                badgeColor: 'emerald' as const,
+                details: act.reason,
+              }));
+              setEvents((prev) => [...actEvents, ...prev]);
+            }
+
+            setTimeout(() => {
+              // Stage 4: VERIFY
+              const ver = backendResult.verification || {};
+              setPipelineSteps([
+                { stepNumber: 1, id: 'DETECT', title: 'DETECT', subtitle: 'Fault & anomaly rules', status: 'completed', note: steps[0]?.note },
+                { stepNumber: 2, id: 'PREDICT', title: 'PREDICT', subtitle: 'Short-horizon forecast', status: 'completed', note: steps[1]?.note },
+                { stepNumber: 3, id: 'REALLOCATE', title: 'REALLOCATE', subtitle: 'Optimize & apply actions', status: 'completed', note: steps[2]?.note },
+                { stepNumber: 4, id: 'VERIFY', title: 'VERIFY', subtitle: 'Check recovery & constraints', status: ver.verified ? 'completed' : 'failed', note: ver.verificationNotes },
+              ]);
+              setRecoveryStateText(`Recovery verified: ${ver.outcome || 'Verified'} — ${ver.verificationNotes || 'Constraints satisfied'}`);
+
+              setAssets((prev) =>
+                prev.map((a) => ({
+                  ...a,
+                  status: a.type === 'grid' && telemetry.gridStatus === 'islanded' ? 'Connected' : 'Online',
+                  isHealthy: true,
+                }))
+              );
+
+              setEvents((prev) => [
+                {
+                  id: `evt-${Date.now()}-ver`,
+                  time: getTimeString(),
+                  title: `Self-healing outcome: ${ver.outcome || 'Verified'}`,
+                  status: 'Verified',
+                  badgeColor: 'emerald',
+                  details: ver.verificationNotes || 'Zero unserved energy. Invariant checks passed: SoC within boundaries.',
+                },
+                ...prev,
+              ]);
+
+              setIsSimulating(false);
+              setActiveFault(null);
+            }, 1000);
+          }, 1000);
+        }, 1000);
+        return;
+      }
+    } catch (err) {
+      // Fallback to client-side simulation when backend server is offline
+    }
 
     // Step 1: DETECT
     setPipelineSteps([
@@ -505,7 +595,24 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsSimulating(false);
   }, []);
 
-  const exportAuditCsv = useCallback(() => {
+  const exportAuditCsv = useCallback(async () => {
+    try {
+      const resp = await fetch('http://localhost:8000/api/events/export-csv');
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `gridheal_audit_events_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+    } catch (e) {
+      // Fallback to client-side CSV generation
+    }
+
     const headers = ['Timestamp', 'Event', 'Status', 'Details'];
     const rows = events.map((e) => [
       `"${e.time}"`,

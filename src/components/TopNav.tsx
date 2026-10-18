@@ -11,6 +11,7 @@ import {
   FileText,
   Activity,
   CornerDownLeft,
+  LogOut,
 } from 'lucide-react';
 import { useMicrogrid, NavigationPage } from '../context/MicrogridContext';
 import { UserRole } from '../types/microgrid';
@@ -56,6 +57,8 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
     events,
     assets,
     faultScenarios,
+    currentUser,
+    signOut,
   } = useMicrogrid();
 
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -388,6 +391,20 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
               >
                 <span>Researcher / Evaluator</span>
                 {userRole === 'researcher' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+              </button>
+
+              <div className="my-1.5 h-px bg-slate-100" />
+              {currentUser && (
+                <div className="px-2.5 pb-1 text-[11px] text-slate-400">
+                  Signed in as <span className="font-medium text-slate-500">{currentUser.email}</span>
+                </div>
+              )}
+              <button
+                onClick={() => signOut()}
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Sign out</span>
               </button>
             </div>
           )}

@@ -20,7 +20,7 @@ const METRICS: Metric[] = [
 ];
 
 const SERIES = [
-  { name: 'No recovery', color: '#CBD5E1' },
+  { name: 'No recovery', color: '#C9D3CC' },
   { name: 'Rule-based', color: C.amber },
   { name: 'Predictive', color: C.brand },
 ] as const;

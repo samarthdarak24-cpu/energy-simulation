@@ -1,0 +1,22 @@
+{
+  "split_method": "chronological_block",
+  "total_records": 4920,
+  "train": {
+    "count": 3444,
+    "percentage": 70.0,
+    "start_time": "2026-06-01T01:00:00+00:00",
+    "end_time": "2026-07-02T06:23:00+00:00"
+  },
+  "validation": {
+    "count": 738,
+    "percentage": 15.0,
+    "start_time": "2026-07-02T06:24:00+00:00",
+    "end_time": "2026-07-03T18:41:00+00:00"
+  },
+  "test": {
+    "count": 738,
+    "percentage": 15.0,
+    "start_time": "2026-07-03T18:42:00+00:00",
+    "end_time": "2026-07-05T06:59:00+00:00"
+  }
+}

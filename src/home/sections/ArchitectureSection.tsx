@@ -186,7 +186,7 @@ const LAYERS: { number: string; title: string; body: string }[] = [
   },
 ];
 
-const PANEL_LABEL = 'text-[10px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]';
+const PANEL_LABEL = 'text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8AA395]';
 
 export const ArchitectureSection: React.FC = () => {
   const [activeNode, setActiveNode] = useState<NodeId>('hub');
@@ -309,15 +309,15 @@ export const ArchitectureSection: React.FC = () => {
               className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-3"
               style={{ borderColor: C.border }}
             >
-              <span className="inline-flex items-center gap-2 text-[11px] text-[#64748B]">
+              <span className="inline-flex items-center gap-2 text-[11px] text-[#5B6B62]">
                 <span className="h-[2px] w-6 rounded-full" style={{ backgroundColor: C.brand }} />
                 Active flow
               </span>
-              <span className="inline-flex items-center gap-2 text-[11px] text-[#64748B]">
+              <span className="inline-flex items-center gap-2 text-[11px] text-[#5B6B62]">
                 <span className="h-[2px] w-6 rounded-full" style={{ backgroundColor: '#D8DEE3' }} />
                 Idle or unavailable
               </span>
-              <span className="text-[11px] text-[#94A3B8] sm:ml-auto">
+              <span className="text-[11px] text-[#8AA395] sm:ml-auto">
                 Hover or focus a node to inspect
               </span>
             </div>
@@ -335,7 +335,7 @@ export const ArchitectureSection: React.FC = () => {
                   <span
                     className="h-1.5 w-1.5 rounded-full"
                     style={{
-                      backgroundColor: active.available === false ? '#94A3B8' : C.brand,
+                      backgroundColor: active.available === false ? '#8AA395' : C.brand,
                     }}
                   />
                   <p className="text-[14px] font-semibold text-[#172535]">{active.label}</p>
@@ -357,7 +357,7 @@ export const ArchitectureSection: React.FC = () => {
 
               <div>
                 <p className={PANEL_LABEL}>Constraint note</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-[#64748B]">{active.note}</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-[#5B6B62]">{active.note}</p>
               </div>
             </div>
           </div>
@@ -368,13 +368,13 @@ export const ArchitectureSection: React.FC = () => {
         {LAYERS.map((layer, index) => (
           <Reveal key={layer.number} delay={index * 70} className="h-full min-w-0">
             <Card className="h-full border-t-2 border-t-[#3E984A] p-5">
-              <span className="font-mono text-[11px] font-semibold tracking-[0.16em] text-[#94A3B8]">
+              <span className="font-mono text-[11px] font-semibold tracking-[0.16em] text-[#8AA395]">
                 {layer.number}
               </span>
               <h3 className="mt-3 text-[15px] font-semibold leading-snug text-[#172535]">
                 {layer.title}
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-[#64748B]">{layer.body}</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-[#5B6B62]">{layer.body}</p>
             </Card>
           </Reveal>
         ))}

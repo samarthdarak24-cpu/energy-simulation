@@ -1,0 +1,86 @@
+# GridHeal Scenario & Disturbance Generation Configuration
+
+simulation:
+  timestep_minutes: 1.0
+  baseline_days_full: 90
+  baseline_days_smoke: 3
+  episode_duration_hours: 24
+  episodes_per_fault_full: 30
+  episodes_per_fault_smoke: 2
+  base_seed: 42
+  start_date: "2025-01-01 00:00:00"
+
+fault_categories:
+  solar_drop:
+    name: "Sudden Solar PV Loss"
+    affected_component: "solar_pv"
+    severity_range_pct: [20.0, 80.0]
+    duration_range_min: [30, 240]
+    description: "Cloud passage or string disconnect causing sudden loss in available irradiance."
+
+  solar_degradation:
+    name: "Gradual Solar Generation Decline"
+    affected_component: "solar_pv"
+    severity_range_pct: [15.0, 60.0]
+    duration_range_min: [120, 600]
+    description: "Dust soiling or gradual inverter thermal throttling reducing PV efficiency."
+
+  grid_outage:
+    name: "External Grid Blackout"
+    affected_component: "grid_substation"
+    severity_range_pct: [100.0, 100.0]
+    duration_range_min: [60, 360]
+    description: "Upstream distribution feeder trip isolating the microgrid into islanded mode."
+
+  demand_spike:
+    name: "Sudden Demand Surge"
+    affected_component: "consumer_loads"
+    severity_range_pct: [25.0, 75.0]  # translates to +15 kW to +45 kW
+    duration_range_min: [45, 180]
+    description: "Unscheduled concurrent heavy load start-up."
+
+  battery_unavailable:
+    name: "Battery Inverter Trip"
+    affected_component: "bess_storage"
+    severity_range_pct: [100.0, 100.0]
+    duration_range_min: [30, 240]
+    description: "Thermal protection relay trip making storage unavailable for charging/discharging."
+
+  battery_reserve_limit:
+    name: "Battery SoC Constraint Limit"
+    affected_component: "bess_storage"
+    severity_range_pct: [50.0, 90.0]
+    duration_range_min: [60, 300]
+    description: "Deep discharge approaching minimum permissible SoC (20%), exhausting reserve."
+
+  sensor_anomaly:
+    name: "Telemetry Sensor Anomaly"
+    affected_component: "sensor_scada"
+    severity_range_pct: [20.0, 50.0]
+    duration_range_min: [60, 240]
+    description: "SCADA sensor calibration drift, offset bias, or stuck reading separate from physical ground truth."
+
+  inverter_anomaly:
+    name: "Inverter Power Limit Anomaly"
+    affected_component: "inverter"
+    severity_range_pct: [40.0, 70.0]
+    duration_range_min: [45, 180]
+    description: "Inverter hardware limit capping maximum exportable solar throughput."
+
+  compound_event:
+    name: "Compound Solar Drop + Grid Outage"
+    affected_component: "solar_pv,grid_substation"
+    severity_range_pct: [50.0, 80.0]
+    duration_range_min: [60, 240]
+    description: "Severe simultaneous solar generation loss during external grid blackout."
+
+recovery_optimizer:
+  weights:
+    critical_unserved_penalty: 10000000.0
+    noncritical_unserved_penalty: 100000.0
+    ev_deferral_cost: 100.0
+    flexible_curtail_cost: 200.0
+    solar_curtail_penalty: 50.0
+    grid_import_cost: 15.0
+    grid_export_revenue: -5.0
+    battery_cycle_wear: 2.0

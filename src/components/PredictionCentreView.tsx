@@ -107,13 +107,53 @@ export const PredictionCentreView: React.FC = () => {
     ...period.imbalance.map((point) => Math.max(point.surplus, point.shortage))
   );
 
-  const updateForecast = () => {
+  const [forecastMetrics, setForecastMetrics] = useState({
+    maeSolar: 3.2,
+    rmseSolar: 4.8,
+    maeDemand: 2.8,
+    rmseDemand: 4.1,
+    accuracy: 94.0,
+  });
+  const [forecastInsights, setForecastInsights] = useState<string[]>([]);
+
+  const updateForecast = async () => {
     if (updating) return;
     setUpdating(true);
-    setTimeout(() => {
+    try {
+      const modelMap: Record<string, string> = {
+        'Hybrid (Time Series + ML)': 'Ensemble Predictive',
+        'AutoETS / Exponential': 'Exponential Smoothing',
+        'Persistence / Naive': 'Persistence Naive',
+      };
+      const requestedModel = modelMap[modelType] || 'Ensemble Predictive';
+
+      const res = await fetch('http://localhost:8000/api/forecast/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: requestedModel,
+          horizonMinutes: 60,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setForecastMetrics({
+          maeSolar: data.maeSolar,
+          rmseSolar: data.rmseSolar,
+          maeDemand: data.maeDemand,
+          rmseDemand: data.rmseDemand,
+          accuracy: data.forecastAccuracyPct,
+        });
+        if (data.insights && data.insights.length > 0) {
+          setForecastInsights(data.insights);
+        }
+      }
+    } catch (e) {
+      // Graceful fallback
+    } finally {
       setUpdating(false);
       setLastUpdated('Just now');
-    }, 1100);
+    }
   };
 
   const recentForecastUpdates = [
