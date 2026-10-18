@@ -87,12 +87,71 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Connect to FastAPI live telemetry WebSocket if available
+  React.useEffect(() => {
+    let ws: WebSocket | null = null;
+    let retryTimeout: any;
+
+    const connectWs = () => {
+      try {
+        ws = new WebSocket('ws://localhost:8000/api/simulation/ws');
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && typeof data.solarGeneration === 'number') {
+              setTelemetry((prev) => ({
+                ...prev,
+                solarGeneration: data.solarGeneration,
+                totalDemand: data.totalDemand,
+                batterySoc: data.batterySoc,
+                batteryPower: data.batteryPower,
+                criticalLoadsServed: data.criticalLoadsServed,
+                criticalLoadsPower: data.criticalLoadsPower,
+                flexibleLoadsPower: data.flexibleLoadsPower,
+                evChargingPower: data.evChargingPower,
+                gridPower: data.gridPower,
+                gridStatus: data.gridStatus,
+                totalSupply: data.totalSupply,
+                gridImport: data.gridImport,
+                unservedEnergyKwh: data.unservedEnergyKwh,
+                netBalanceKw: data.netBalanceKw,
+                recoveryTimeMin: data.recoveryTimeMin,
+                constraintViolations: data.constraintViolations,
+              }));
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        };
+        ws.onerror = () => {};
+        ws.onclose = () => {
+          retryTimeout = setTimeout(connectWs, 5000);
+        };
+      } catch (err) {
+        retryTimeout = setTimeout(connectWs, 5000);
+      }
+    };
+
+    connectWs();
+    return () => {
+      if (ws) ws.close();
+      clearTimeout(retryTimeout);
+    };
+  }, []);
+
   // Inject a controlled fault
   const injectFault = useCallback((scenarioId: string, severity: number = 50, durationHours: number = 2) => {
     const scenario = FAULT_SCENARIOS.find((s) => s.id === scenarioId) || FAULT_SCENARIOS[0];
     setActiveFault(scenario);
     setFaultSeverity(severity);
     setFaultDurationHours(durationHours);
+
+    // Notify FastAPI backend
+    fetch('http://localhost:8000/api/faults/inject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenarioId, severity, durationHours, autoRecovery: false }),
+    }).catch(() => {});
 
     const currentTime = getTimeString();
 
@@ -353,6 +412,7 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [isSimulating, telemetry]);
 
   const clearFault = useCallback(() => {
+    fetch('http://localhost:8000/api/faults/clear', { method: 'POST' }).catch(() => {});
     setActiveFault(null);
     setTelemetry(INITIAL_TELEMETRY);
     setAssets(INITIAL_ASSETS);
@@ -365,6 +425,12 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const resetAll = useCallback(() => {
+    fetch('http://localhost:8000/api/simulation/control', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset' }),
+    }).catch(() => {});
+    fetch('http://localhost:8000/api/faults/clear', { method: 'POST' }).catch(() => {});
     setActiveFault(null);
     setTelemetry(INITIAL_TELEMETRY);
     setPipelineSteps(INITIAL_PIPELINE_STEPS);
