@@ -27,6 +27,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useMicrogrid } from '../context/MicrogridContext';
+import { API_BASE_URL } from '../config/api';
 
 interface PresetLocation {
   id: string;
@@ -399,17 +400,17 @@ export const WeatherIntelligenceView: React.FC = () => {
 
   // Fetch presets and config once
   useEffect(() => {
-    fetch('http://localhost:8000/api/weather/presets')
+    fetch(`${API_BASE_URL}/api/weather/presets`)
       .then((res) => res.json())
       .then((data) => setPresets(data))
       .catch(() => {});
 
-    fetch('http://localhost:8000/api/weather/config')
+    fetch(`${API_BASE_URL}/api/weather/config`)
       .then((res) => res.json())
       .then((data) => setApiConfig({ isConfigured: data.isConfigured, maskedApiKey: data.maskedApiKey }))
       .catch(() => {});
 
-    fetch('http://localhost:8000/api/weather/all-presets-status')
+    fetch(`${API_BASE_URL}/api/weather/all-presets-status`)
       .then((res) => res.json())
       .then((data) => setAllPresetsStatus(data))
       .catch(() => {});
@@ -428,7 +429,7 @@ export const WeatherIntelligenceView: React.FC = () => {
       params.append('irradianceDropThreshold', solarLossThreshold.toString());
       params.append('heatThreshold', heatThreshold.toString());
 
-      const res = await fetch(`http://localhost:8000/api/weather/current?${params.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/api/weather/current?${params.toString()}`);
       if (res.ok) {
         const data: WeatherResponse = await res.json();
         setWeatherData(data);
@@ -450,7 +451,7 @@ export const WeatherIntelligenceView: React.FC = () => {
     setSavingKey(true);
     setKeySaveMessage(null);
     try {
-      const res = await fetch('http://localhost:8000/api/weather/config', {
+      const res = await fetch(`${API_BASE_URL}/api/weather/config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: apiKeyInput.trim() }),

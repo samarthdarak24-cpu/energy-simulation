@@ -1,0 +1,46 @@
+# Render Blueprint Specification for GridHeal Full-Stack Microgrid Platform
+# Deploys both FastAPI Python backend web service and Vite React frontend static site.
+# Official Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # -------------------------------------------------------------
+  # 1. FastAPI Python Web Service (Backend + WebSockets)
+  # -------------------------------------------------------------
+  - type: web
+    name: gridheal-backend
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: MONGODB_URL
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: gridheal
+      - key: WEATHER_API_KEY
+        sync: false
+
+  # -------------------------------------------------------------
+  # 2. Vite React Static Site (Frontend)
+  # -------------------------------------------------------------
+  - type: web
+    name: gridheal-frontend
+    runtime: static
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      # Single-Page Application rewrite rule
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: gridheal-backend
+          property: host

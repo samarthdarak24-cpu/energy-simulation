@@ -21,6 +21,7 @@ import {
   INITIAL_ASSETS,
   FAULT_SCENARIOS,
 } from '../data/initialData';
+import { API_BASE_URL, WS_BASE_URL } from '../config/api';
 
 export type NavigationPage =
   | 'home'
@@ -144,7 +145,7 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const connectWs = () => {
       try {
-        ws = new WebSocket('ws://localhost:8000/api/simulation/ws');
+        ws = new WebSocket(`${WS_BASE_URL}/api/simulation/ws`);
         ws.onopen = () => {
           setIsWsConnected(true);
         };
@@ -363,7 +364,7 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsAutoRecoverPaused(false);
 
     // Notify FastAPI backend
-    fetch('http://localhost:8000/api/faults/inject', {
+    fetch(`${API_BASE_URL}/api/faults/inject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scenarioId, severity, durationHours, autoRecovery: false }),
@@ -586,7 +587,7 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Trigger FastAPI HiGHS optimization loop
     let backendResult: any = null;
     try {
-      const res = await fetch('http://localhost:8000/api/recovery/trigger', {
+      const res = await fetch(`${API_BASE_URL}/api/recovery/trigger`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ runOptimization: true, applyActions: true }),
@@ -719,7 +720,7 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [isSimulating, telemetry]);
 
   const clearFault = useCallback(() => {
-    fetch('http://localhost:8000/api/faults/clear', { method: 'POST' }).catch(() => {});
+    fetch(`${API_BASE_URL}/api/faults/clear`, { method: 'POST' }).catch(() => {});
     setActiveFault(null);
     setAutoRecoverCountdown(null);
     setIsAutoRecoverPaused(false);
@@ -735,12 +736,12 @@ export const MicrogridProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const resetAll = useCallback(() => {
-    fetch('http://localhost:8000/api/simulation/control', {
+    fetch(`${API_BASE_URL}/api/simulation/control`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'reset' }),
     }).catch(() => {});
-    fetch('http://localhost:8000/api/faults/clear', { method: 'POST' }).catch(() => {});
+    fetch(`${API_BASE_URL}/api/faults/clear`, { method: 'POST' }).catch(() => {});
     setActiveFault(null);
     setAutoRecoverCountdown(null);
     setIsAutoRecoverPaused(false);
