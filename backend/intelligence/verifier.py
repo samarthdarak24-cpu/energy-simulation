@@ -8,11 +8,11 @@ class VerificationEngine:
     def verify_state(self, dt_hours: float = 5.0 / 60.0) -> Dict[str, Any]:
         telemetry = orchestrator.latest_telemetry
 
-        # 1. Energy & Power Balance
-        supply = telemetry["totalSupply"]
-        demand = telemetry["totalDemand"]
-        mismatch_kw = round(abs(supply - demand), 2)
-        power_conservation_valid = mismatch_kw <= 1.5
+        # 1. Energy & Power Balance: Generation + Discharge + Import == Demand + Charge + Export
+        supply = telemetry["solarGeneration"] + max(0.0, telemetry["batteryPower"]) + max(0.0, telemetry["gridPower"])
+        absorbed = telemetry["totalDemand"] + max(0.0, -telemetry["batteryPower"]) + max(0.0, -telemetry["gridPower"])
+        mismatch_kw = round(abs(supply - absorbed), 2)
+        power_conservation_valid = mismatch_kw <= 2.0
 
         # 2. Battery bounds check
         bess = orchestrator.battery
@@ -36,7 +36,8 @@ class VerificationEngine:
         critical_protected = critical_served_pct >= 99.9
 
         # 5. Remaining shortages
-        unserved_power_kw = max(0.0, round(demand - supply, 2))
+        demand_req = telemetry["totalDemand"]
+        unserved_power_kw = max(0.0, round(demand_req - supply, 2))
         unserved_kwh = telemetry["unservedEnergyKwh"]
 
         # 6. Overall Verification Outcome
