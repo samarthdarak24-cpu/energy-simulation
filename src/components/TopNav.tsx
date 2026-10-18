@@ -20,6 +20,7 @@ interface TopNavProps {
 }
 
 const PAGE_TITLES: Record<NavigationPage, string> = {
+  home: 'Home',
   overview: 'Recovery Lab',
   twin: 'Microgrid Digital Twin',
   faults: 'Fault Simulation Studio',
@@ -159,7 +160,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
       {/* Brand Zone */}
       <div className="flex items-center gap-3 shrink-0">
         <div
-          onClick={() => setActivePage('overview')}
+          onClick={() => setActivePage('home')}
           className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 cursor-pointer"
         >
           <svg
@@ -177,7 +178,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenFaultModal }) => {
         </div>
         <div className="flex items-center gap-2">
           <span
-            onClick={() => setActivePage('overview')}
+            onClick={() => setActivePage('home')}
             className="text-lg font-bold tracking-tight text-slate-900 cursor-pointer"
           >
             GridHeal
