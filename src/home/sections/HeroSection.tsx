@@ -103,25 +103,6 @@ export const HeroSection: React.FC = () => {
         }}
       />
 
-      {/* Live System Operational Header Pill */}
-      <div style={fade(0)} className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#CFE6D5] bg-[#EAF5EC] px-3.5 py-1.5 text-xs font-semibold text-[#1B5E36] shadow-sm">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#3E984A] opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1B5E36]" />
-          </span>
-          <span>GRIDHEAL RECOVERY LAB v2.4</span>
-          <span className="text-[#9FC6A8]">·</span>
-          <span className="font-medium text-[#2E7D47]">DIGITAL TWIN LIVE</span>
-          <span className="text-[#9FC6A8]">·</span>
-          <span className="font-mono text-[11px] text-[#1B5E36]">0.000 kW RESIDUAL</span>
-        </div>
-
-        <div className="hidden items-center gap-2 rounded-full border border-[#E4E9E4] bg-white px-3 py-1 text-xs text-[#5B6B62] sm:inline-flex">
-          <Cpu className="h-3.5 w-3.5 text-[#3E984A]" />
-          <span>HiGHS LP Solver: Nominal</span>
-        </div>
-      </div>
 
       <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
         {/* Left Column: Core Value Proposition & Actions */}

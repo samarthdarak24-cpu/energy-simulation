@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Section, SectionHeading, Reveal, Card, Chip, C } from '../ui';
+import {
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+  Cpu,
+  Layers,
+  ShieldCheck,
+  Zap,
+} from 'lucide-react';
+import { Section, SectionHeading, Reveal, Card, Chip, C, useGo } from '../ui';
+import type { NavigationPage } from '../../context/MicrogridContext';
 
 type Point = { x: number; y: number };
 
@@ -23,87 +33,127 @@ interface Asset {
   status: AssetStatus;
   gx: number;
   gy: number;
+  bus: string;
+  voltage: string;
+  specs: string;
+  constraint: string;
 }
 
 interface Capability {
   n: string;
   title: string;
+  subtitle: string;
+  engine: string;
+  metric: string;
   description: string;
+  page: NavigationPage;
 }
 
 const hubAsset: Asset = {
   id: 'hub',
   label: 'Energy Hub',
   state: 'Balanced',
-  role: 'Dispatch and control',
+  role: 'Dispatch & Control',
   status: 'online',
   gx: 3,
   gy: 3,
+  bus: 'Main PCC Bus',
+  voltage: '480V (1.002 p.u.)',
+  specs: 'Multi-feeder SCADA interconnect',
+  constraint: 'Kirchhoff Residual = 0.000 kW',
 };
 
 const assets: Asset[] = [
   {
     id: 'solar',
-    label: 'Solar array',
+    label: 'Solar Array',
     state: '128 kW',
-    role: 'Primary generation',
+    role: 'Primary Generation',
     status: 'online',
     gx: 0.8,
     gy: 2.4,
+    bus: 'Bus 1 (PV)',
+    voltage: '480V (1.004 p.u.)',
+    specs: '150 kWp bifacial monocrystalline',
+    constraint: 'Max ramp rate: 4.2 kW/sec',
   },
   {
     id: 'grid',
-    label: 'Grid connection',
+    label: 'Grid Connection',
     state: 'Connected',
-    role: 'Import and export',
+    role: 'Import / Export Intertie',
     status: 'online',
     gx: 2,
     gy: 0.5,
+    bus: 'Bus 3 (PCC)',
+    voltage: '480V (1.000 p.u.)',
+    specs: '500 kW bidirectional tie',
+    constraint: 'Import headroom: 500 kW max',
   },
   {
     id: 'battery',
-    label: 'Battery storage',
+    label: 'Battery Storage',
     state: '76% SoC',
-    role: 'Short-term reserve',
+    role: 'Short-Term Reserve',
     status: 'online',
     gx: 4,
     gy: 1,
+    bus: 'Bus 2 (BESS)',
+    voltage: '480V (1.001 p.u.)',
+    specs: '280 kWh Li-ion C-rate buffer',
+    constraint: 'Safe discharge: 20%–100% SoC',
   },
   {
     id: 'hospital',
     label: 'St. Aiden Hospital',
     state: '420 kW',
-    role: 'Priority load',
+    role: 'Priority 1 Critical',
     status: 'online',
     gx: 1.5,
     gy: 5,
+    bus: 'Bus 4 (Critical)',
+    voltage: '480V (0.998 p.u.)',
+    specs: 'ICU & Emergency surgical wing',
+    constraint: 'Zero-shedding contract: 100% SLA',
   },
   {
     id: 'house-a',
-    label: 'Residential block A',
+    label: 'Residential Block A',
     state: '38 kW',
-    role: 'Flexible load',
+    role: 'Flexible Demand',
     status: 'online',
     gx: 3.5,
     gy: 5,
+    bus: 'Bus 5A (Loads)',
+    voltage: '240V (0.996 p.u.)',
+    specs: '42 smart residential units',
+    constraint: 'Thermostatic shiftable: ±5 kW',
   },
   {
     id: 'house-b',
-    label: 'Residential block B',
+    label: 'Residential Block B',
     state: '31 kW',
-    role: 'Flexible load',
+    role: 'Flexible Demand',
     status: 'online',
     gx: 5,
     gy: 3.5,
+    bus: 'Bus 5B (Loads)',
+    voltage: '240V (0.997 p.u.)',
+    specs: '36 smart apartments',
+    constraint: 'Curtailable buffer: up to 15%',
   },
   {
     id: 'ev',
-    label: 'EV chargers',
+    label: 'EV Fast Chargers',
     state: '6 of 8 active',
-    role: 'Deferrable demand',
+    role: 'Deferrable Load',
     status: 'idle',
     gx: 5.5,
     gy: 2.5,
+    bus: 'Bus 6 (EV Hub)',
+    voltage: '480V (0.994 p.u.)',
+    specs: '8x 50 kW Level 3 DC chargers',
+    constraint: 'Dynamic throttling: 0–100%',
   },
   hubAsset,
 ];
@@ -112,24 +162,42 @@ const capabilities: Capability[] = [
   {
     n: '01',
     title: 'Simulate',
+    subtitle: 'Physics-Constrained Twin',
+    engine: 'pandapower Newton-Raphson AC',
+    metric: '1.0s step · 6 buses · 3 feeders',
     description:
-      'Create a virtual representation of generation, storage, demand, and grid connectivity.',
+      'Continuous power-flow simulation modeling lines, transformers, PV inverters, and battery electrochemical states.',
+    page: 'twin',
   },
   {
     n: '02',
     title: 'Anticipate',
-    description: 'Forecast possible shortages and changes in operating conditions.',
+    subtitle: 'Multi-Horizon Forecasting',
+    engine: 'HistGradientBoosting (P10/P50/P90)',
+    metric: 'R² = 0.984 · 15m to 24h horizons',
+    description:
+      'Predicts upcoming solar irradiance drops, cloud shadows, and EV cluster load surges with empirical quantile bounds.',
+    page: 'prediction',
   },
   {
     n: '03',
     title: 'Coordinate',
-    description: 'Allocate available energy while respecting asset and load priorities.',
+    subtitle: 'Autonomous Recovery Optimizer',
+    engine: 'HiGHS Mixed-Integer LP (MILP)',
+    metric: '1.14 ms solve time · 0 violations',
+    description:
+      'Solves multi-objective energy dispatch, balancing storage discharge, EV throttling, and flexible load shaving.',
+    page: 'recovery',
   },
   {
     n: '04',
     title: 'Verify',
+    subtitle: 'Closed-Loop Physical Audit',
+    engine: 'Kirchhoff Residual Verifier',
+    metric: '0.000 kW residual · 100% verified',
     description:
-      'Confirm whether corrective actions restore the required simulated operating state.',
+      'Audits post-recovery electrical states before dispatching breaker signals, ensuring zero voltage or thermal violations.',
+    page: 'benchmark',
   },
 ];
 
@@ -472,6 +540,7 @@ const renderAssetBody = (
 };
 
 export const IntelligenceSection: React.FC = () => {
+  const go = useGo();
   const [hovered, setHovered] = useState<AssetId | null>(null);
   const [selected, setSelected] = useState<AssetId | null>(null);
   const [activeCapability, setActiveCapability] = useState(0);
