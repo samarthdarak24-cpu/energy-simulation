@@ -1,0 +1,291 @@
+import {
+  MicrogridTelemetry,
+  RecoveryStep,
+  ActiveAlert,
+  RecoveryEvent,
+  HistoricalBarData,
+  ForecastPoint,
+  AssetHealth,
+  FaultScenario,
+} from '../types/microgrid';
+
+export const INITIAL_TELEMETRY: MicrogridTelemetry = {
+  solarGeneration: 128,
+  solarPrevChange: 12,
+  totalDemand: 105,
+  demandPrevChange: 6,
+  batterySoc: 76,
+  batterySocChange: 5,
+  batteryPower: 50,
+  batteryCapacityKwh: 200,
+  criticalLoadsServed: 100,
+  criticalLoadsPower: 70,
+  flexibleLoadsPower: 18,
+  evChargingPower: 32,
+  gridPower: 0,
+  gridStatus: 'connected',
+  totalSupply: 210,
+  gridImport: 0,
+  unservedEnergyKwh: 0,
+  netBalanceKw: 105,
+  recoveryTimeMin: 8,
+  constraintViolations: 0,
+};
+
+export const INITIAL_PIPELINE_STEPS: RecoveryStep[] = [
+  {
+    stepNumber: 1,
+    id: 'DETECT',
+    title: 'DETECT',
+    subtitle: 'Fault and anomaly rules',
+    status: 'completed',
+    note: 'Solar drop & demand imbalance detected via streaming telemetry rules'
+  },
+  {
+    stepNumber: 2,
+    id: 'PREDICT',
+    title: 'PREDICT',
+    subtitle: 'Short-horizon forecast',
+    status: 'completed',
+    note: 'Forecast indicates potential 18 kW deficit in 45 min'
+  },
+  {
+    stepNumber: 3,
+    id: 'REALLOCATE',
+    title: 'REALLOCATE',
+    subtitle: 'Optimize & apply actions',
+    status: 'active',
+    note: 'Dispatching 46 kW battery reserve + deferring non-urgent EV charging'
+  },
+  {
+    stepNumber: 4,
+    id: 'VERIFY',
+    title: 'VERIFY',
+    subtitle: 'Check recovery & constraints',
+    status: 'pending',
+    note: 'Recalculating nodal power flow and confirming zero critical shed'
+  },
+];
+
+export const HISTORICAL_CHART_DATA: HistoricalBarData[] = [
+  {
+    date: '2025-04-28',
+    label: 'Apr 28',
+    solar: 42,
+    battery: 32,
+    grid: 40,
+    demand: 105,
+    total: 114,
+  },
+  {
+    date: '2025-04-29',
+    label: 'Apr 29',
+    solar: 50,
+    battery: 40,
+    grid: 35,
+    demand: 118,
+    total: 125,
+  },
+  {
+    date: '2025-04-30',
+    label: 'Apr 30',
+    solar: 58,
+    battery: 48,
+    grid: 48,
+    demand: 135,
+    total: 154,
+  },
+  {
+    date: '2025-05-01',
+    label: 'May 1',
+    solar: 65,
+    battery: 50,
+    grid: 45,
+    demand: 140,
+    total: 160,
+  },
+  {
+    date: '2025-05-02',
+    label: 'May 2',
+    solar: 92,
+    battery: 46,
+    grid: 12,
+    demand: 138,
+    total: 178,
+  },
+  {
+    date: '2025-05-04',
+    label: 'May 4',
+    solar: 48,
+    battery: 44,
+    grid: 38,
+    demand: 120,
+    total: 130,
+  },
+];
+
+export const FORECAST_CHART_DATA: ForecastPoint[] = [
+  { date: 'May 1', solarForecast: 65, demandForecast: 90, actual: 68 },
+  { date: 'May 2', solarForecast: 95, demandForecast: 135, actual: 92 },
+  { date: 'May 3', solarForecast: 110, demandForecast: 125, actual: 108 },
+  { date: 'May 4', solarForecast: 128, demandForecast: 105, actual: 128 },
+  { date: 'May 5', solarForecast: 90, demandForecast: 115 },
+  { date: 'May 6', solarForecast: 75, demandForecast: 120 },
+  { date: 'May 7', solarForecast: 105, demandForecast: 110 },
+];
+
+export const INITIAL_ALERTS: ActiveAlert[] = [
+  {
+    id: 'alt-01',
+    title: 'Demand imbalance risk',
+    severity: 'Medium',
+    description: 'Forecasted deficit in 45 min',
+    time: '12:42 PM',
+    category: 'imbalance',
+  },
+];
+
+export const INITIAL_EVENTS: RecoveryEvent[] = [
+  {
+    id: 'evt-01',
+    time: '12:38',
+    title: 'Fault detected — solar generation drop',
+    status: 'Detected',
+    badgeColor: 'emerald',
+    details: 'Sudden irradiance drop (-50 kW), rate of change exceeds threshold.',
+  },
+  {
+    id: 'evt-02',
+    time: '12:40',
+    title: 'Forecast: 18 kW deficit in 45 min',
+    status: 'Predicted',
+    badgeColor: 'emerald',
+    details: 'Time-series model projected shortfall based on load curve trend.',
+  },
+  {
+    id: 'evt-03',
+    time: '12:41',
+    title: 'Reallocated: battery discharge + shift EV charging',
+    status: 'Actioned',
+    badgeColor: 'emerald',
+    details: 'Dispatched BESS to 50 kW; deferred Level 2 non-urgent EV load by 14 kW.',
+  },
+  {
+    id: 'evt-04',
+    time: '12:43',
+    title: 'Energy balance restored',
+    status: 'Verified',
+    badgeColor: 'emerald',
+    details: 'All critical loads preserved at 100%. Microgrid power balance stabilized.',
+  },
+];
+
+export const INITIAL_ASSETS: AssetHealth[] = [
+  {
+    id: 'ast-pv',
+    name: 'Solar PV',
+    type: 'solar',
+    status: 'Online',
+    isHealthy: true,
+    powerKw: 128,
+    efficiency: 97.4,
+    temperature: 34,
+  },
+  {
+    id: 'ast-bess',
+    name: 'Battery Storage',
+    type: 'battery',
+    status: 'Online',
+    isHealthy: true,
+    powerKw: 50,
+    efficiency: 95.8,
+    temperature: 28,
+  },
+  {
+    id: 'ast-ev',
+    name: 'EV Charging',
+    type: 'ev',
+    status: 'Online',
+    isHealthy: true,
+    powerKw: 32,
+    efficiency: 98.1,
+  },
+  {
+    id: 'ast-grid',
+    name: 'Grid Connection',
+    type: 'grid',
+    status: 'Connected',
+    isHealthy: true,
+    powerKw: 0,
+    efficiency: 99.2,
+  },
+  {
+    id: 'ast-crit',
+    name: 'Critical Loads',
+    type: 'critical',
+    status: 'Online',
+    isHealthy: true,
+    powerKw: 70,
+    efficiency: 100,
+  },
+  {
+    id: 'ast-flex',
+    name: 'Flexible Loads',
+    type: 'flexible',
+    status: 'Online',
+    isHealthy: true,
+    powerKw: 18,
+    efficiency: 100,
+  },
+];
+
+export const FAULT_SCENARIOS: FaultScenario[] = [
+  {
+    id: 'solar_drop',
+    name: 'Sudden Solar Generation Drop',
+    description: 'Rapid cloud cover or panel bank disconnection causing sudden generation drop.',
+    type: 'solar_drop',
+    defaultSeverity: 50,
+    impactSummary: 'Drops solar output from 128 kW to 64 kW, creating an immediate energy deficit.',
+  },
+  {
+    id: 'demand_surge',
+    name: 'Severe Demand Surge',
+    description: 'Sudden unexpected industrial or heating load activation.',
+    type: 'demand_surge',
+    defaultSeverity: 40,
+    impactSummary: 'Increases demand by +42 kW, straining available generation capacity.',
+  },
+  {
+    id: 'battery_trip',
+    name: 'Battery Inverter Trip / Failure',
+    description: 'Protection breaker tripped on Battery Energy Storage System (BESS).',
+    type: 'battery_trip',
+    defaultSeverity: 80,
+    impactSummary: 'BESS cannot discharge, requiring immediate EV deferral or grid import fallback.',
+  },
+  {
+    id: 'ev_peak',
+    name: 'Uncoordinated EV Fleet Peak',
+    description: 'Multiple high-power fleet vehicles plug in concurrently.',
+    type: 'ev_peak',
+    defaultSeverity: 60,
+    impactSummary: 'Adds +35 kW EV charging load, pushing system beyond renewable budget.',
+  },
+  {
+    id: 'grid_outage',
+    name: 'Main Utility Grid Blackout',
+    description: 'Upstream substation failure forces microgrid into intentional islanded mode.',
+    type: 'grid_outage',
+    defaultSeverity: 100,
+    impactSummary: 'Islands microgrid completely; microgrid must achieve zero unserved critical load autonomously.',
+  },
+  {
+    id: 'comm_failure',
+    name: 'SCADA Communication Link Degraded',
+    description: 'High packet loss on edge sensor network causing stale telemetry.',
+    type: 'comm_failure',
+    defaultSeverity: 30,
+    impactSummary: 'Triggers fallback robust optimization rules using predictive forecast state.',
+  },
+];

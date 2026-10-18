@@ -1,0 +1,6 @@
+{
+  "name": "GridHeal: Recovery Lab",
+  "description": "A predictive, self-healing software-defined microgrid digital twin that predicts energy imbalances, autonomously reallocates assets, and verifies critical-load recovery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
