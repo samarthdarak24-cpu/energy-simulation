@@ -13,6 +13,7 @@ import {
   Sliders,
   Play,
   RotateCcw,
+  Database,
 } from 'lucide-react';
 import { useMicrogrid } from '../context/MicrogridContext';
 
@@ -193,7 +194,16 @@ export const PredictionCentreView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setActivePage('settings')}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-2xs hover:bg-emerald-100 transition-colors"
+          >
+            <Database className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Dataset & Model Inspector</span>
+          </button>
+
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs">
             <Calendar className="h-3.5 w-3.5 text-slate-400" />
             <span>{dateRange}</span>

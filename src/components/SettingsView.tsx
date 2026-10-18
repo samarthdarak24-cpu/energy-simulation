@@ -23,6 +23,7 @@ import { ControlOptimizationPanel } from './settings/ControlOptimizationPanel';
 import { ForecastingSettingsPanel } from './settings/ForecastingSettingsPanel';
 import { ScenarioManagementPanel } from './settings/ScenarioManagementPanel';
 import { SystemSettingsPanel } from './settings/SystemSettingsPanel';
+import { DatasetModelPanel } from './settings/DatasetModelPanel';
 
 export const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Asset Configuration');
@@ -144,6 +145,7 @@ export const SettingsView: React.FC = () => {
       <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto pb-1 text-xs font-semibold">
         {[
           'Asset Configuration',
+          'Datasets & AI Models',
           'Simulation Settings',
           'Control & Optimization',
           'Forecasting Settings',
@@ -229,8 +231,8 @@ export const SettingsView: React.FC = () => {
 
       {/* Main Configuration Grid: Left (Forms) & Right (Presets + Quick Actions) */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        {/* Left 9 Columns */}
-        <div className="xl:col-span-9 space-y-6">
+        {/* Left Columns */}
+        <div className={`${activeTab === 'Datasets & AI Models' ? 'xl:col-span-12' : 'xl:col-span-9'} space-y-6`}>
           {activeTab === 'Asset Configuration' && (
             <>
           {/* Row 1: Solar PV Config (Left) & Battery Storage Config (Right) */}
@@ -899,6 +901,7 @@ export const SettingsView: React.FC = () => {
             </>
           )}
 
+          {activeTab === 'Datasets & AI Models' && <DatasetModelPanel />}
           {activeTab === 'Simulation Settings' && <SimulationSettingsPanel />}
           {activeTab === 'Control & Optimization' && <ControlOptimizationPanel />}
           {activeTab === 'Forecasting Settings' && <ForecastingSettingsPanel />}
@@ -907,96 +910,98 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Right 3 Columns */}
-        <div className="xl:col-span-3 space-y-6">
-          {/* Quick Actions */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
-            <span className="text-xs font-bold text-slate-900 block">Quick Actions</span>
-            <button
-              onClick={handleSave}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all"
-            >
-              <Save className="h-3.5 w-3.5" />
-              <span>{savedAlert ? 'Settings Saved!' : 'Save Settings'}</span>
-            </button>
+        {activeTab !== 'Datasets & AI Models' && (
+          <div className="xl:col-span-3 space-y-6">
+            {/* Quick Actions */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
+              <span className="text-xs font-bold text-slate-900 block">Quick Actions</span>
+              <button
+                onClick={handleSave}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#2E7D32] py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#256829] transition-all"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span>{savedAlert ? 'Settings Saved!' : 'Save Settings'}</span>
+              </button>
 
-            <button
-              onClick={() => {}}
-              className="w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
-              <span>Reset to Default</span>
-            </button>
-
-            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
               <button
                 onClick={() => {}}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 p-2 font-semibold text-slate-700 hover:bg-slate-50"
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
-                <Upload className="h-3.5 w-3.5 text-slate-500" />
-                <span>Load Preset</span>
+                <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                <span>Reset to Default</span>
               </button>
-              <button
-                onClick={() => {}}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 p-2 font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                <Download className="h-3.5 w-3.5 text-slate-500" />
-                <span>Export Config</span>
-              </button>
+
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                <button
+                  onClick={() => {}}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 p-2 font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <Upload className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Load Preset</span>
+                </button>
+                <button
+                  onClick={() => {}}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 p-2 font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <Download className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Export Config</span>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Configuration Presets */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900">Configuration Presets</span>
-              <span className="text-[10px] text-slate-400 font-medium">See All &gt;</span>
-            </div>
+            {/* Configuration Presets */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">Configuration Presets</span>
+                <span className="text-[10px] text-slate-400 font-medium">See All &gt;</span>
+              </div>
 
-            <div className="space-y-2 text-xs">
-              {presets.map((pr) => {
-                const Icon = pr.icon;
-                const isCurrent = activePreset === pr.name;
+              <div className="space-y-2 text-xs">
+                {presets.map((pr) => {
+                  const Icon = pr.icon;
+                  const isCurrent = activePreset === pr.name;
 
-                return (
-                  <button
-                    key={pr.id}
-                    onClick={() => handleSelectPreset(pr.id, pr.name)}
-                    className={`flex items-start gap-2.5 w-full p-2.5 rounded-xl border text-left transition-all ${
-                      isCurrent
-                        ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700 shrink-0 mt-0.5">
-                      <Icon className="h-3.5 w-3.5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-800 text-[11px]">{pr.name}</span>
-                        {isCurrent ? (
-                          <div className="h-4 w-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                            <Check className="h-2.5 w-2.5 stroke-[3]" />
-                          </div>
-                        ) : (
-                          <div className="h-3.5 w-3.5 rounded-full border border-slate-300" />
-                        )}
+                  return (
+                    <button
+                      key={pr.id}
+                      onClick={() => handleSelectPreset(pr.id, pr.name)}
+                      className={`flex items-start gap-2.5 w-full p-2.5 rounded-xl border text-left transition-all ${
+                        isCurrent
+                          ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500'
+                          : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700 shrink-0 mt-0.5">
+                        <Icon className="h-3.5 w-3.5 text-emerald-600" />
                       </div>
-                      <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{pr.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-800 text-[11px]">{pr.name}</span>
+                          {isCurrent ? (
+                            <div className="h-4 w-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                              <Check className="h-2.5 w-2.5 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <div className="h-3.5 w-3.5 rounded-full border border-slate-300" />
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{pr.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
 
-            <button
-              onClick={() => {}}
-              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 mt-2"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Save Current as Preset</span>
-            </button>
+              <button
+                onClick={() => {}}
+                className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 mt-2"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Save Current as Preset</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

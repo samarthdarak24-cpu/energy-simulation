@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.database import init_db
 from backend.mongodb import init_mongo, close_mongo, is_mongodb_configured, MONGODB_DB_NAME
 from backend.simulation.orchestrator import orchestrator
+from backend.services.replay_service import replay_service
 from backend.routers import (
     simulation_router,
     twin_router,
@@ -18,6 +19,7 @@ from backend.routers import (
     dataset_router,
     mongo_router,
     weather_router,
+    replay_router,
 )
 
 
@@ -40,18 +42,39 @@ async def simulation_clock_loop():
             await asyncio.sleep(1.0)
 
 
+async def replay_background_loop():
+    """Background task streaming recorded measurements when replay is active."""
+    while True:
+        try:
+            if replay_service.is_running and not replay_service.is_paused:
+                delay = max(0.05, 1.0 / max(0.1, replay_service.speed))
+                await asyncio.sleep(delay)
+                if replay_service.is_running and not replay_service.is_paused:
+                    await asyncio.to_thread(replay_service.step_forward)
+            else:
+                await asyncio.sleep(0.2)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            await asyncio.sleep(0.5)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: initialize database tables & MongoDB connection
     init_db()
     await init_mongo()
-    # Start background simulation clock task
-    task = asyncio.create_task(simulation_clock_loop())
+    # Start background simulation clock and replay stream tasks
+    sim_task = asyncio.create_task(simulation_clock_loop())
+    replay_task = asyncio.create_task(replay_background_loop())
     yield
-    # Shutdown: cancel background task & close MongoDB
-    task.cancel()
+    # Shutdown: cancel background tasks
+    sim_task.cancel()
+    replay_task.cancel()
     try:
-        await task
+        await asyncio.gather(sim_task, replay_task, return_exceptions=True)
     except asyncio.CancelledError:
         pass
     await close_mongo()
@@ -86,6 +109,7 @@ app.include_router(support_router.router)
 app.include_router(dataset_router.router)
 app.include_router(mongo_router.router)
 app.include_router(weather_router.router)
+app.include_router(replay_router.router)
 
 
 @app.get("/")
