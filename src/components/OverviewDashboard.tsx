@@ -8,6 +8,7 @@ import {
   Calendar,
   AlertTriangle,
   Play,
+  Pause,
   BarChart2,
   Download,
   CheckCircle2,
@@ -47,6 +48,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     isSimulating,
     recoveryStateText,
     setActivePage,
+    activeFault,
+    faultSeverity,
+    clearFault,
+    isRealtimeActive,
+    toggleRealtime,
+    isWsConnected,
   } = useMicrogrid();
 
   const [hoveredBar, setHoveredBar] = useState<HistoricalBarData | null>(
@@ -69,13 +76,72 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                Microgrid Overview
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                  Microgrid Overview
+                </h1>
+
+                {/* Real-Time Live Status Pill */}
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-all ${
+                      isRealtimeActive
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                        : 'border-slate-200 bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    <span className="relative flex h-2 w-2">
+                      {isRealtimeActive && (
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      )}
+                      <span
+                        className={`relative inline-flex rounded-full h-2 w-2 ${
+                          isRealtimeActive ? 'bg-emerald-500' : 'bg-slate-400'
+                        }`}
+                      />
+                    </span>
+                    <span>{isRealtimeActive ? 'LIVE REALTIME' : 'STREAM PAUSED'}</span>
+                    {isWsConnected && (
+                      <span className="text-[10px] text-emerald-600 font-mono font-normal">
+                        (WS Live)
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Play / Pause Toggle Button */}
+                  <button
+                    onClick={toggleRealtime}
+                    title={isRealtimeActive ? 'Pause real-time stream' : 'Resume real-time dynamic stream'}
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-2xs"
+                  >
+                    {isRealtimeActive ? (
+                      <>
+                        <Pause className="h-3 w-3 text-slate-500" />
+                        <span>Pause</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3 w-3 fill-current text-emerald-600" />
+                        <span>Resume</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
                 <span>Live digital twin</span>
                 <span className="text-slate-300">•</span>
                 <span>Simulation data</span>
+                <span className="text-slate-300">•</span>
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span>
+                    {telemetry.lastUpdated
+                      ? `Updated ${telemetry.lastUpdated}`
+                      : 'Dynamic updates active'}
+                  </span>
+                </span>
               </p>
             </div>
 
@@ -113,23 +179,69 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
           </div>
 
+          {/* Active Fault Alert Banner */}
+          {activeFault && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600 shrink-0">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider bg-rose-100 px-1.5 py-0.5 rounded">
+                      Active Disturbance
+                    </span>
+                    <span className="text-xs font-bold text-rose-950">
+                      {activeFault.name} ({faultSeverity}% severity)
+                    </span>
+                  </div>
+                  <p className="text-xs text-rose-800/90 mt-0.5">
+                    {activeFault.impactSummary}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => runRecoveryLoop()}
+                  disabled={isSimulating}
+                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Play className="h-3 w-3 fill-current" />
+                  <span>{isSimulating ? 'Recovering...' : 'Auto-Recover'}</span>
+                </button>
+                <button
+                  onClick={clearFault}
+                  className="px-3.5 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-100/60 text-rose-700 text-xs font-semibold transition-colors"
+                >
+                  Clear Fault
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Row 1: 4 Metric Cards + Compact Summary on the Right */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
             {/* Card 1: Solar Generation */}
-            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <Sun className="h-4 w-4" />
+            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between transition-all hover:border-emerald-200 group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:scale-105 transition-transform">
+                    <Sun className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">Solar Generation</span>
                 </div>
-                <span className="text-xs font-medium text-slate-500">Solar Generation</span>
+                {isRealtimeActive && (
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Dynamic real-time stream" />
+                )}
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums">
+                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums transition-all">
                   {telemetry.solarGeneration} kW
                 </div>
                 <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-600">
                   <span>
-                    ↑ {telemetry.solarPrevChange > 0 ? telemetry.solarPrevChange : 12}%
+                    ↑ {telemetry.solarPrevChange > 0 ? telemetry.solarPrevChange : 18}%
                   </span>
                   <span className="text-slate-400 font-normal">vs. previous 7 days</span>
                 </div>
@@ -137,20 +249,25 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
 
             {/* Card 2: Total Demand */}
-            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <Zap className="h-4 w-4" />
+            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between transition-all hover:border-emerald-200 group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:scale-105 transition-transform">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">Total Demand</span>
                 </div>
-                <span className="text-xs font-medium text-slate-500">Total Demand</span>
+                {isRealtimeActive && (
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Dynamic real-time stream" />
+                )}
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums">
+                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums transition-all">
                   {telemetry.totalDemand} kW
                 </div>
                 <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-600">
                   <span>
-                    ↑ {telemetry.demandPrevChange > 0 ? telemetry.demandPrevChange : 6}%
+                    ↑ {telemetry.demandPrevChange > 0 ? telemetry.demandPrevChange : 4}%
                   </span>
                   <span className="text-slate-400 font-normal">vs. previous 7 days</span>
                 </div>
@@ -158,20 +275,27 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
 
             {/* Card 3: Battery SoC */}
-            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <BatteryCharging className="h-4 w-4" />
+            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between transition-all hover:border-emerald-200 group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:scale-105 transition-transform">
+                    <BatteryCharging className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">Battery SoC</span>
                 </div>
-                <span className="text-xs font-medium text-slate-500">Battery SoC</span>
+                {isRealtimeActive && (
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Dynamic real-time stream" />
+                )}
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums">
+                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums transition-all">
                   {telemetry.batterySoc}%
                 </div>
-                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-600">
                   <span>
-                    ↑ {telemetry.batterySocChange > 0 ? telemetry.batterySocChange : 5}%
+                    {telemetry.batterySocChange < 0
+                      ? `↓ ${Math.abs(telemetry.batterySocChange)}%`
+                      : `↑ ${telemetry.batterySocChange}%`}
                   </span>
                   <span className="text-slate-400 font-normal">vs. previous 7 days</span>
                 </div>
@@ -179,15 +303,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
 
             {/* Card 4: Critical Loads Served */}
-            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <ShieldCheck className="h-4 w-4" />
+            <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between transition-all hover:border-emerald-200 group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:scale-105 transition-transform">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">Critical Loads Served</span>
                 </div>
-                <span className="text-xs font-medium text-slate-500">Critical Loads Served</span>
+                {isRealtimeActive && (
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Dynamic real-time stream" />
+                )}
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums">
+                <div className="text-2xl font-bold tracking-tight text-slate-900 font-mono tabular-nums transition-all">
                   {telemetry.criticalLoadsServed}%
                 </div>
                 <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-600">
@@ -201,9 +330,17 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           {/* Row 2: Solar Generation vs Demand (kW) Stacked Bar Chart */}
           <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4">
-              <h2 className="text-sm font-bold text-slate-900">
-                Solar Generation vs Demand (kW)
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-900">
+                  Solar Generation vs Demand (kW)
+                </h2>
+                {isRealtimeActive && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Live Synced
+                  </span>
+                )}
+              </div>
 
               {/* Chart Legend matching exact image colors */}
               <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
@@ -253,6 +390,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   const x = 70 + index * 95;
                   const scale = 160 / 200; // 160px height for 200kW
 
+                  const isMay2 = d.label === 'May 2';
                   const solarH = d.solar * scale;
                   const batteryH = d.battery * scale;
                   const gridH = d.grid * scale;
@@ -270,6 +408,14 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       className="cursor-pointer group"
                       onMouseEnter={() => setHoveredBar(d)}
                     >
+                      {/* Live beacon above May 2 bar */}
+                      {isMay2 && isRealtimeActive && (
+                        <g transform={`translate(${x + barWidth / 2}, ${Math.max(8, gridY - 8)})`}>
+                          <circle cx="0" cy="0" r="4" fill="#10B981" className="animate-ping opacity-75" />
+                          <circle cx="0" cy="0" r="2.5" fill="#059669" />
+                        </g>
+                      )}
+
                       {/* Solar segment (green) */}
                       <rect
                         x={x}

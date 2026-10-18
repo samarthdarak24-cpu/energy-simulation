@@ -53,7 +53,10 @@ export const MicrogridTwinView: React.FC = () => {
     runRecoveryLoop,
     isSimulating,
     injectFault,
+    clearFault,
     resetAll,
+    activeFault,
+    faultSeverity,
     exportAuditCsv,
   } = useMicrogrid();
 
@@ -865,6 +868,23 @@ export const MicrogridTwinView: React.FC = () => {
                 <span>Inject Fault</span>
               </button>
             </div>
+
+            {activeFault && (
+              <div className="flex items-center justify-between p-2 rounded-xl border border-rose-200 bg-rose-50/70 text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                  <span className="font-semibold text-rose-900 truncate">
+                    {activeFault.name} ({faultSeverity}%)
+                  </span>
+                </div>
+                <button
+                  onClick={clearFault}
+                  className="shrink-0 text-[11px] font-semibold text-rose-700 hover:underline pl-2"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
               <button

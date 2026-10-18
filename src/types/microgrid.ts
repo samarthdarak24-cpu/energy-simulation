@@ -25,6 +25,8 @@ export interface MicrogridTelemetry {
   
   recoveryTimeMin: number; // e.g. 8 min
   constraintViolations: number; // e.g. 0
+  simulatedTime?: string;
+  lastUpdated?: string;
 }
 
 export interface RecoveryStep {
@@ -89,4 +91,15 @@ export interface FaultScenario {
   type: 'solar_drop' | 'demand_surge' | 'battery_trip' | 'ev_peak' | 'grid_outage' | 'comm_failure';
   defaultSeverity: number; // 0 - 100%
   impactSummary: string;
+}
+
+export interface AppliedAction {
+  id: string;
+  actionType: string;
+  targetAsset: string;
+  requestedAdjustmentKw: number;
+  appliedAdjustmentKw: number;
+  status: string;
+  reason: string;
+  constraintConsiderations?: string;
 }

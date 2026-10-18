@@ -170,7 +170,7 @@ const statusClass = (status: Status) =>
 const PAGE_SIZE = 10;
 
 export const EventLogsView: React.FC = () => {
-  const { exportAuditCsv } = useMicrogrid();
+  const { exportAuditCsv, events } = useMicrogrid();
 
   const [dateRange] = useState('Apr 28, 2025 – May 4, 2025');
   const [selectedScenario, setSelectedScenario] = useState('All Scenarios');
@@ -181,15 +181,41 @@ export const EventLogsView: React.FC = () => {
   const [selectedId, setSelectedId] = useState('log-1');
   const [page, setPage] = useState(1);
 
+  const allLogs = useMemo<AuditLog[]>(() => {
+    const liveItems: AuditLog[] = events.map((ev, i) => ({
+      id: ev.id,
+      stamp: `Today ${ev.time}`,
+      ts: Date.now() - i * 1000,
+      type: ev.title.toLowerCase().includes('fault')
+        ? 'Fault Detected'
+        : ev.title.toLowerCase().includes('forecast')
+        ? 'Prediction Completed'
+        : ev.title.toLowerCase().includes('optimizer')
+        ? 'Action Applied'
+        : 'Verification',
+      severity: ev.badgeColor === 'rose' ? 'High' : ev.badgeColor === 'amber' ? 'Medium' : 'Low',
+      status: ev.status === 'Detected' ? 'Active' : ev.status === 'Actioned' ? 'Active' : 'Resolved',
+      details: ev.details || ev.title,
+      action: ev.title.toLowerCase().includes('optimizer')
+        ? 'Resource Dispatch Applied'
+        : ev.title.toLowerCase().includes('fault')
+        ? 'Autonomous Detection'
+        : 'Telemetry Logged',
+      source: ev.title.toLowerCase().includes('fault') ? 'Fault Studio' : 'Recovery Control',
+      custom: true,
+    }));
+    return [...liveItems, ...AUDIT_LOGS];
+  }, [events]);
+
   const eventTypes = useMemo(
-    () => ['All Events', ...Array.from(new Set(AUDIT_LOGS.map((log) => log.type)))],
-    []
+    () => ['All Events', ...Array.from(new Set(allLogs.map((log) => log.type)))],
+    [allLogs]
   );
 
   const filtered = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
-    return AUDIT_LOGS.filter((log) => {
+    return allLogs.filter((log) => {
       if (eventTypeFilter !== 'All Events' && log.type !== eventTypeFilter) return false;
       if (severityFilter !== 'All Severities' && log.severity !== severityFilter) return false;
       if (statusFilter !== 'All Statuses' && log.status !== statusFilter) return false;
@@ -198,7 +224,7 @@ export const EventLogsView: React.FC = () => {
         return false;
       return true;
     });
-  }, [eventTypeFilter, severityFilter, statusFilter, searchTerm, selectedScenario]);
+  }, [allLogs, eventTypeFilter, severityFilter, statusFilter, searchTerm, selectedScenario]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);

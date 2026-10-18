@@ -29,9 +29,13 @@ export const RecoveryControlView: React.FC = () => {
     runRecoveryLoop,
     isSimulating,
     injectFault,
+    clearFault,
     resetAll,
     activeFault,
     faultSeverity,
+    pipelineSteps,
+    events,
+    appliedActions,
     setActivePage,
   } = useMicrogrid();
 
@@ -301,10 +305,10 @@ export const RecoveryControlView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-center">
-              <span className="text-[10px] text-slate-400 block">Generation Drop</span>
-              <span className="font-mono text-base font-bold text-rose-600">-{faultSeverity}%</span>
+              <span className="text-[10px] text-slate-400 block">Severity</span>
+              <span className="font-mono text-base font-bold text-rose-600">{activeFault ? `${faultSeverity}%` : '0%'}</span>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-center">
               <span className="text-[10px] text-slate-400 block">Estimated Shortage</span>
@@ -314,23 +318,46 @@ export const RecoveryControlView: React.FC = () => {
               <span className="text-[10px] text-rose-800 block">Impact Level</span>
               <span className="font-sans text-xs font-bold text-rose-700">{impactLevel}</span>
             </div>
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <button
+                onClick={() => runRecoveryLoop()}
+                disabled={isSimulating}
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>{isSimulating ? 'Recovering...' : 'Auto-Recover'}</span>
+              </button>
+              {activeFault && (
+                <button
+                  onClick={clearFault}
+                  className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition-colors"
+                >
+                  Clear Fault
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Recovery Pipeline (5 Steps) */}
+      {/* Recovery Pipeline (4 Live Closed-Loop Steps) */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-        <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">
-          Recovery Pipeline
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            Closed-Loop Recovery Pipeline
+          </h2>
+          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+            HiGHS Linear Programming Solver
+          </span>
+        </div>
 
         <div className="flex flex-col gap-2 md:flex-row md:items-stretch">
-          {recoveryPipelineSteps.map((step, index) => {
+          {pipelineSteps.map((step, index) => {
             const isCompleted = step.status === 'completed';
             const isActive = step.status === 'active';
 
             return (
-              <React.Fragment key={step.num}>
+              <React.Fragment key={step.id}>
                 <div
                   className={`flex-1 rounded-xl border p-3.5 transition-all ${
                     isActive
@@ -350,15 +377,22 @@ export const RecoveryControlView: React.FC = () => {
                           : 'bg-slate-200 text-slate-600'
                       }`}
                     >
-                      {isCompleted ? '✓' : step.num}
+                      {isCompleted ? '✓' : step.stepNumber}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">{step.time}</span>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {isCompleted ? 'Done' : isActive ? 'Active' : 'Pending'}
+                    </span>
                   </div>
                   <div className="text-xs font-bold text-slate-900">{step.title}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5">{step.subtitle}</div>
+                  {step.note && (
+                    <div className="text-[9px] text-emerald-800 font-mono mt-1.5 line-clamp-2 bg-emerald-50/60 p-1 rounded">
+                      {step.note}
+                    </div>
+                  )}
                 </div>
 
-                {index < recoveryPipelineSteps.length - 1 && (
+                {index < pipelineSteps.length - 1 && (
                   <div className="hidden shrink-0 items-center justify-center text-slate-300 md:flex">
                     <ChevronRight className="h-4 w-4" />
                   </div>
@@ -386,18 +420,34 @@ export const RecoveryControlView: React.FC = () => {
               </div>
 
               <div>
-                <span className="text-[10px] font-bold text-slate-700 block mb-1">Chosen Actions:</span>
-                <ul className="text-[11px] text-slate-600 space-y-1">
-                  <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
-                    <Check className="h-3 w-3" /> Discharge battery (15 kW)
-                  </li>
-                  <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
-                    <Check className="h-3 w-3" /> Defer non-urgent EV charging (10 kW)
-                  </li>
-                  <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
-                    <Check className="h-3 w-3" /> Reduce flexible loads (5 kW)
-                  </li>
-                </ul>
+                <span className="text-[10px] font-bold text-slate-700 block mb-1">Applied Actions (HiGHS Optimizer):</span>
+                {appliedActions.length > 0 ? (
+                  <ul className="text-[11px] text-slate-600 space-y-1.5">
+                    {appliedActions.map((act) => (
+                      <li key={act.id} className="flex items-start gap-1.5 text-emerald-800 font-medium">
+                        <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="text-[11px] font-semibold">{act.reason}</div>
+                          {act.constraintConsiderations && (
+                            <div className="text-[9px] text-slate-500 font-normal">{act.constraintConsiderations}</div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="text-[11px] text-slate-600 space-y-1">
+                    <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                      <Check className="h-3 w-3" /> Autonomous BESS dynamic dispatch
+                    </li>
+                    <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                      <Check className="h-3 w-3" /> Smart EV charging concurrency deferral
+                    </li>
+                    <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                      <Check className="h-3 w-3" /> Controllable HVAC thermal shedding
+                    </li>
+                  </ul>
+                )}
               </div>
 
               <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs">
@@ -433,7 +483,7 @@ export const RecoveryControlView: React.FC = () => {
                       <Sun className="h-3.5 w-3.5 text-emerald-600" /> Solar Generation
                     </span>
                     <div className="font-mono font-bold text-slate-900">
-                      51 kW <span className="text-[10px] text-rose-600 font-normal">↓ 60%</span>
+                      {telemetry.solarGeneration} kW
                     </div>
                   </div>
 
@@ -442,16 +492,16 @@ export const RecoveryControlView: React.FC = () => {
                       <BatteryCharging className="h-3.5 w-3.5 text-emerald-600" /> Battery Discharge
                     </span>
                     <div className="font-mono font-bold text-slate-900">
-                      15 kW <span className="text-[10px] text-emerald-600 font-normal">↑</span>
+                      {telemetry.batteryPower} kW
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-1.5 text-slate-600">
-                      <Car className="h-3.5 w-3.5 text-emerald-600" /> EV Charging (Deferred)
+                      <Car className="h-3.5 w-3.5 text-emerald-600" /> EV Charging Demand
                     </span>
                     <div className="font-mono font-bold text-slate-900">
-                      0 kW <span className="text-[10px] text-amber-600 font-normal">↓ 10 kW</span>
+                      {telemetry.evChargingPower} kW
                     </div>
                   </div>
 
@@ -460,16 +510,16 @@ export const RecoveryControlView: React.FC = () => {
                       <Home className="h-3.5 w-3.5 text-emerald-600" /> Flexible Loads
                     </span>
                     <div className="font-mono font-bold text-slate-900">
-                      5 kW <span className="text-[10px] text-amber-600 font-normal">↓ 5 kW</span>
+                      {telemetry.flexibleLoadsPower} kW
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="flex items-center gap-1.5 text-slate-600">
-                      <Radio className="h-3.5 w-3.5 text-emerald-600" /> Grid Import
+                      <Radio className="h-3.5 w-3.5 text-emerald-600" /> Grid Exchange
                     </span>
                     <div className="font-mono font-bold text-slate-900">
-                      12 kW <span className="text-[10px] text-emerald-600 font-normal">↑ 12 kW</span>
+                      {telemetry.gridPower} kW ({telemetry.gridStatus})
                     </div>
                   </div>
                 </div>
@@ -556,24 +606,26 @@ export const RecoveryControlView: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                    {recoveryLogs.map((rl, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">{rl.time}</td>
+                    {events.slice(0, 10).map((ev) => (
+                      <tr key={ev.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">{ev.time}</td>
                         <td className="py-2.5 px-3 font-sans font-semibold text-slate-800">
-                          {rl.event}
+                          {ev.title}
                         </td>
-                        <td className="py-2.5 px-3 font-sans text-slate-600">{rl.details}</td>
+                        <td className="py-2.5 px-3 font-sans text-slate-600">{ev.details || '—'}</td>
                         <td className="py-2.5 px-3 font-sans">
                           <span
                             className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold ${
-                              rl.statusColor === 'rose'
+                              ev.badgeColor === 'rose'
                                 ? 'bg-rose-50 text-rose-700'
-                                : rl.statusColor === 'blue'
+                                : ev.badgeColor === 'amber'
+                                ? 'bg-amber-50 text-amber-800'
+                                : ev.badgeColor === 'blue'
                                 ? 'bg-blue-50 text-blue-700'
                                 : 'bg-emerald-50 text-emerald-700'
                             }`}
                           >
-                            {rl.status}
+                            {ev.status}
                           </span>
                         </td>
                       </tr>
