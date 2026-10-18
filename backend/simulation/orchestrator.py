@@ -157,12 +157,22 @@ class SimulationOrchestrator:
         # 6. Network validation
         val = self.validator.validate_power_balance(solar_gen, actual_battery_kw, actual_grid_kw, served_demand_kw)
 
-        # 7. Package Telemetry
+        # 7. Compute delta changes from previous step
+        if len(self.history) > 0:
+            prev_solar = self.history[-1]['solarGeneration']
+            prev_demand = self.history[-1]['totalDemand']
+            solar_prev_change = round((solar_gen - prev_solar) / max(1.0, prev_solar) * 100.0, 1)
+            demand_prev_change = round((total_requested - prev_demand) / max(1.0, prev_demand) * 100.0, 1)
+        else:
+            solar_prev_change = 0.0
+            demand_prev_change = 0.0
+
+        # 8. Package Telemetry
         telemetry = {
             "solarGeneration": solar_gen,
-            "solarPrevChange": 12.0,
+            "solarPrevChange": solar_prev_change,
             "totalDemand": total_requested,
-            "demandPrevChange": 6.0,
+            "demandPrevChange": demand_prev_change,
             "batterySoc": self.battery.current_soc,
             "batterySocChange": round(actual_battery_kw * 0.1, 1),
             "batteryPower": actual_battery_kw,
@@ -177,7 +187,7 @@ class SimulationOrchestrator:
             "gridImport": max(0.0, actual_grid_kw),
             "unservedEnergyKwh": self.unserved_energy_accum_kwh,
             "netBalanceKw": round(total_supply - total_requested, 2),
-            "recoveryTimeMin": 8.0,
+            "recoveryTimeMin": self._compute_recovery_time(total_requested, total_supply, dt_hours),
             "constraintViolations": 0 if val["is_balanced"] else 1,
             "simulatedTime": self.clock.current_time_str,
             "timestep": self.clock.current_step,
@@ -201,6 +211,15 @@ class SimulationOrchestrator:
         self._broadcast(telemetry)
 
         return telemetry
+
+    @staticmethod
+    def _compute_recovery_time(total_requested: float, total_supply: float, dt_hours: float) -> float:
+        shortfall_kw = max(0.0, total_requested - total_supply)
+        if shortfall_kw <= 0.0 or total_requested <= 0.0:
+            return 0.0
+
+        unmet_fraction = min(1.0, shortfall_kw / total_requested)
+        return round(min(120.0, max(dt_hours * 60.0, unmet_fraction * 60.0)), 1)
 
     def _save_measurement_to_db(self, t: Dict[str, Any]):
         db = SessionLocal()
